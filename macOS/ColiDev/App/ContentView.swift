@@ -114,6 +114,8 @@ struct ContentView: View {
             }
             .listStyle(.sidebar)
             .navigationTitle("ColiDev")
+            // The default column cut “Программирование”, “Локальные модели” and “Направления” on every CI runner.
+            .navigationSplitViewColumnWidth(min: 210, ideal: 230)
         } detail: {
             Group {
                 switch selection ?? .today {

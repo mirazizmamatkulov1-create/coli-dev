@@ -32,3 +32,6 @@ Thumbs.db
 DerivedData/
 *.xcuserstate
 xcuserdata/
+
+# Claude Code session worktrees
+.claude/worktrees/

@@ -557,6 +557,33 @@ jobs:
           test -x "$RUNNER_TEMP/ColiDevDerivedData/Build/Products/Debug/ColiDev.app/Contents/Resources/ColiDevBackend/ColiDevBackend"
           python 01_Projects/curriculum_routes.py "$resources"
 
+      # xcodebuild test injects DYLD_FRAMEWORK_PATH, so UI tests can pass even when the app
+      # cannot find its embedded frameworks. Launch it the way Finder does to catch that.
+      - name: Verify the app launches outside Xcode / Проверить запуск приложения вне Xcode
+        run: |
+          app="$RUNNER_TEMP/ColiDevDerivedData/Build/Products/Debug/ColiDev.app"
+          binary="$app/Contents/MacOS/ColiDev"
+          test -f "$app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle"
+          rpaths="$(otool -l "$binary" | grep -A2 LC_RPATH || true)"
+          case "$rpaths" in
+            *"@executable_path/../Frameworks"*) echo "Runpath found: @executable_path/../Frameworks" ;;
+            *) echo "The app binary has no @executable_path/../Frameworks runpath." >&2; exit 1 ;;
+          esac
+          env -i HOME="$HOME" PATH="/usr/bin:/bin" "$binary" >"$RUNNER_TEMP/standalone-launch.log" 2>&1 &
+          pid=$!
+          sleep 10
+          if ! kill -0 "$pid" 2>/dev/null; then
+            status=0
+            wait "$pid" || status=$?
+            cat "$RUNNER_TEMP/standalone-launch.log"
+            echo "ColiDev exited during a standalone launch (status $status)." >&2
+            exit 1
+          fi
+          kill "$pid"
+          wait "$pid" 2>/dev/null || true
+          pkill -f ColiDevBackend || true
+          echo "ColiDev stayed running for 10 seconds without Xcode's framework path."
+
       - name: Package macOS app archive
         id: package
         if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')

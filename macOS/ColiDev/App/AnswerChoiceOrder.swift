@@ -452,6 +452,43 @@ struct StudyAssessmentEvidence: Codable, Equatable {
         self.passed = passed
     }
 
+    // The backend stores knowledge checks in the compact form {task_type, passed, error_categories?, item_id?}
+    // and returns it in progress records and evidence summaries, so attempt fields are optional for that type.
+    // Бэкенд хранит проверки знаний в сжатом виде без полей попытки и так же возвращает их в прогрессе.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let taskType = try container.decode(String.self, forKey: .taskType)
+        let itemID = try container.decodeIfPresent(String.self, forKey: .itemID)
+        let errorCategories = try container.decodeIfPresent([StudyErrorCategory].self, forKey: .errorCategories)
+        let passed = try container.decodeIfPresent(Bool.self, forKey: .passed)
+        if container.contains(.attempts) {
+            self.init(
+                taskType: taskType,
+                attempts: try container.decode(Int.self, forKey: .attempts),
+                firstTryCorrect: try container.decode(Bool.self, forKey: .firstTryCorrect),
+                hintsUsed: try container.decode(Int.self, forKey: .hintsUsed),
+                errorCategories: errorCategories,
+                passed: passed,
+                itemID: itemID
+            )
+        } else if taskType == "knowledge_check", let passed {
+            self.init(
+                taskType: taskType,
+                attempts: 1,
+                firstTryCorrect: passed,
+                hintsUsed: 0,
+                errorCategories: errorCategories,
+                passed: passed,
+                itemID: itemID
+            )
+        } else {
+            throw DecodingError.keyNotFound(
+                CodingKeys.attempts,
+                DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Interactive assessments need attempt evidence; knowledge checks need a pass result. / Для интерактивных заданий нужны данные попытки, для проверки знаний — итоговый результат.")
+            )
+        }
+    }
+
     enum CodingKeys: String, CodingKey {
         case taskType = "task_type"
         case itemID = "item_id"
@@ -643,37 +680,7 @@ struct StudyAssessmentEvent: Codable, Identifiable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(String.self, forKey: .id)
         lessonID = try container.decode(String.self, forKey: .lessonID)
-
-        let assessmentContainer = try container.nestedContainer(keyedBy: AssessmentCodingKeys.self, forKey: .assessment)
-        let taskType = try assessmentContainer.decode(String.self, forKey: .taskType)
-        let itemID = try assessmentContainer.decodeIfPresent(String.self, forKey: .itemID)
-        if assessmentContainer.contains(.attempts) {
-            assessment = StudyAssessmentEvidence(
-                taskType: taskType,
-                attempts: try assessmentContainer.decode(Int.self, forKey: .attempts),
-                firstTryCorrect: try assessmentContainer.decode(Bool.self, forKey: .firstTryCorrect),
-                hintsUsed: try assessmentContainer.decode(Int.self, forKey: .hintsUsed),
-                errorCategories: try assessmentContainer.decodeIfPresent([StudyErrorCategory].self, forKey: .errorCategories),
-                passed: try assessmentContainer.decodeIfPresent(Bool.self, forKey: .passed),
-                itemID: itemID
-            )
-        } else if taskType == "knowledge_check" {
-            let passed = try assessmentContainer.decode(Bool.self, forKey: .passed)
-            assessment = StudyAssessmentEvidence(
-                taskType: taskType,
-                attempts: 1,
-                firstTryCorrect: passed,
-                hintsUsed: 0,
-                errorCategories: try assessmentContainer.decodeIfPresent([StudyErrorCategory].self, forKey: .errorCategories),
-                passed: passed,
-                itemID: itemID
-            )
-        } else {
-            throw DecodingError.keyNotFound(
-                AssessmentCodingKeys.attempts,
-                DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Interactive-prediction events need attempt evidence. / Для событий интерактивного прогноза нужны данные попытки.")
-            )
-        }
+        assessment = try container.decode(StudyAssessmentEvidence.self, forKey: .assessment)
     }
 
     func encode(to encoder: Encoder) throws {

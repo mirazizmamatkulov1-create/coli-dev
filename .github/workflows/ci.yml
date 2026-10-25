@@ -231,6 +231,18 @@ jobs:
             -o "$RUNNER_TEMP/verify-study-recommendation"
           "$RUNNER_TEMP/verify-study-recommendation"
 
+      - name: Verify study progress decoding / Проверка чтения прогресса из backend
+        run: |
+          swiftc -parse-as-library macOS/ColiDev/App/StudyRecommendation.swift macOS/ColiDev/App/AnswerChoiceOrder.swift macOS/ColiDev/App/CustomCurriculum.swift macOS/ColiDev/scripts/verify_study_progress_decoding.swift \
+            -o "$RUNNER_TEMP/verify-study-progress-decoding"
+          "$RUNNER_TEMP/verify-study-progress-decoding"
+
+      - name: Verify lesson Markdown rendering / Проверка отображения Markdown в уроках
+        run: |
+          swiftc -parse-as-library macOS/ColiDev/App/LessonMarkdown.swift macOS/ColiDev/scripts/verify_lesson_markdown.swift \
+            -o "$RUNNER_TEMP/verify-lesson-markdown"
+          "$RUNNER_TEMP/verify-lesson-markdown"
+
       - name: Verify study-goal dashboard integration / Проверка цели в учебной панели
         run: python macOS/ColiDev/scripts/verify_study_goal_integration.py
 

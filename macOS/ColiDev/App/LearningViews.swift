@@ -420,7 +420,7 @@ private struct CurriculumLessonVideoCard: View {
                 Text(L10n.text("lesson.video.beforeLabel", language))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(tint)
-                Text(activity.beforeWatching)
+                Text(LessonMarkdown.attributed(activity.beforeWatching))
                     .font(.callout)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("lesson.video.before")
@@ -582,7 +582,7 @@ private struct CurriculumCheckOptionButton: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                Text(title)
+                Text(LessonMarkdown.attributed(title))
                     .multilineTextAlignment(.leading)
                 Spacer(minLength: 0)
             }
@@ -592,6 +592,7 @@ private struct CurriculumCheckOptionButton: View {
             .overlay(RoundedRectangle(cornerRadius: 11).strokeBorder(.quaternary, lineWidth: 1))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(Text(LessonMarkdown.plainText(title)))
         .disabled(isDisabled)
     }
 }
@@ -665,7 +666,7 @@ struct CurriculumModuleView: View {
                 Text(L10n.text("lesson.video.afterLabel", store.language))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(subject.tint)
-                Text(activity.afterWatching)
+                Text(LessonMarkdown.attributed(activity.afterWatching))
                     .font(.callout)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("lesson.video.after")
@@ -735,7 +736,7 @@ struct CurriculumModuleView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             Text(L10n.text("module.check", store.language))
                                 .font(.title2.weight(.semibold))
-                            Text(document.checkQuestion)
+                            Text(LessonMarkdown.attributed(document.checkQuestion))
                                 .font(.headline)
                             if let checkAttempt {
                                 ForEach(Array(checkAttempt.choiceOrder.displayedOriginalIndices.enumerated()), id: \.offset) { displayedIndex, originalIndex in
@@ -791,15 +792,15 @@ struct CurriculumModuleView: View {
 
                                     if isCorrect || isCheckExplanationRevealed {
                                         if !isCorrect {
-                                            Text(String(
+                                            Text(LessonMarkdown.inline(String(
                                                 format: L10n.text("module.correctOption", store.language),
                                                 document.checkOptions[checkAttempt.answerOriginalIndex]
-                                            ))
+                                            )))
                                                 .font(.callout.weight(.medium))
                                         }
 
                                         if let explanation = feedback.explanation {
-                                            Text((try? AttributedString(markdown: explanation)) ?? AttributedString(explanation))
+                                            Text(LessonMarkdown.attributed(explanation))
                                                 .textSelection(.enabled)
                                                 .padding(.top, 2)
                                         } else {
@@ -1346,7 +1347,7 @@ private struct ModuleTextCard: View {
             Text(title)
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(tint)
-            Text((try? AttributedString(markdown: text)) ?? AttributedString(text))
+            Text(LessonMarkdown.attributed(text))
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
                 .lineSpacing(4)
@@ -1568,7 +1569,7 @@ struct LessonSessionView: View {
                     .buttonStyle(.borderless)
                 }
                 if let explanation = feedback.explanation {
-                    Text((try? AttributedString(markdown: explanation)) ?? AttributedString(explanation))
+                    Text(LessonMarkdown.attributed(explanation))
                         .font(.callout)
                         .textSelection(.enabled)
                         .fixedSize(horizontal: false, vertical: true)

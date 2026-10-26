@@ -424,6 +424,12 @@ jobs:
             -o "$RUNNER_TEMP/verify-synaptic-summation"
           "$RUNNER_TEMP/verify-synaptic-summation"
 
+      - name: Verify replicator error threshold model / Проверка модели порога ошибок
+        run: |
+          swiftc macOS/ColiDev/App/ReplicatorErrorThreshold.swift macOS/ColiDev/scripts/verify_replicator_error_threshold.swift \
+            -o "$RUNNER_TEMP/verify-replicator-error-threshold"
+          "$RUNNER_TEMP/verify-replicator-error-threshold"
+
       - name: Verify pendulum model / Проверка модели маятника
         run: |
           swiftc macOS/ColiDev/App/Pendulum.swift macOS/ColiDev/scripts/verify_pendulum.swift \

@@ -403,7 +403,7 @@ private enum CauseAndCorseLearningJourney {
         .init(
             id: "biology",
             title: .init(ru: "Биология и зоология: системы жизни", en: "Biology and zoology: living systems"),
-            description: .init(ru: "Клетки, наследственность, эволюция и функции животных; старые материалы сверяй с современными источниками.", en: "Cells, heredity, evolution, and animal function; compare older course material with current sources."),
+            description: .init(ru: "Клетки, наследственность, эволюция и функции животных; в приложении урок «Что такое жизнь и как она могла возникнуть» связывает их с вопросом о происхождении и создании жизни. Старые материалы сверяй с современными источниками.", en: "Cells, heredity, evolution, and animal function; in the app, “What life is and how it might have begun” connects them to the question of how life began and could be built. Compare older course material with current sources."),
             projectOutput: .init(ru: "Сделай схему одной биологической системы и подпиши, какие источники подтверждают связи между её частями.", en: "Diagram one biological system and cite sources that support the links between its parts."),
             subjects: [.biology, .zoology],
             sources: [

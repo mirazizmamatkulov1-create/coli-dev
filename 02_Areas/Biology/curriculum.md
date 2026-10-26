@@ -22,6 +22,7 @@
 | Модуль / Module | Результат обучения / Learning outcome | Урок / Lesson |
 |---|---|---|
 | Экспрессия генов и регуляция / Gene expression and regulation | Связывать ДНК, РНК, белок и регуляцию, учитывая тип клетки и условия. / Relate DNA, RNA, proteins, and regulation in context. | lesson:gene_expression_and_regulation |
+| Что такое жизнь и как она могла возникнуть / What life is and how it might have begun | Называть общие черты живых систем, связывать «мир РНК» и протоклетку с опытными данными и объяснять, как точность копирования ограничивает объём наследственной информации; отличать проверенные шаги от открытых вопросов. / Name the shared features of living systems, connect the RNA world and protocells to experimental evidence, and explain how copying accuracy limits hereditary information; separate tested steps from open questions. | lesson:what_is_life_and_its_origin |
 | Деление клетки, развитие и ткани / Cell division, development, tissues | Описывать деление и специализацию клеток, не смешивая этапы и их функции. / Describe division and differentiation accurately. | lesson:cell_cycle_and_differentiation |
 | Микробиология и взаимодействие организмов / Microbiology and organism interactions | Сравнивать микробные группы и их роль в организмах и окружающей среде. / Compare microbial groups and their ecological roles. | |
 | Физиология растений и животных / Plant and animal physiology | Связывать строение систем органов с обменом, регуляцией и средой. / Relate organ systems to metabolism, regulation, and environment. | |

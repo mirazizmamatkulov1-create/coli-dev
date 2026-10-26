@@ -1850,6 +1850,8 @@ private struct PracticeLab: View {
             GradientDescentLab()
         } else if subject == .biology, moduleResource == "synapses_and_signal_summation" {
             SynapticSummationLab()
+        } else if subject == .biology, moduleResource == "what_is_life_and_its_origin" {
+            ReplicatorErrorThresholdLab()
         } else if subject == .physics, moduleResource == "oscillations_and_waves" {
             PendulumLab()
         } else if subject == .physics, moduleResource == "temperature_and_heat" {
@@ -10996,6 +10998,110 @@ private struct SynapticSummationLab: View {
                     .fill(Color.orange)
                     .frame(width: 2)
                     .offset(x: geometry.size.width * CGFloat(thresholdFraction))
+            }
+        }
+    }
+}
+
+private struct ReplicatorErrorThresholdLab: View {
+    @EnvironmentObject private var store: LearningStore
+    @State private var length = 100.0
+    @State private var errorPercent = 1.0
+    @State private var advantage = 10.0
+
+    private var errorRate: Double { errorPercent / 100 }
+
+    private var exactCopy: Double {
+        ReplicatorErrorThresholdModel.exactCopyProbability(length: length, errorRate: errorRate)
+    }
+
+    private var offspring: Double {
+        ReplicatorErrorThresholdModel.exactOffspring(length: length, errorRate: errorRate, advantage: advantage)
+    }
+
+    private var persists: Bool {
+        ReplicatorErrorThresholdModel.persists(length: length, errorRate: errorRate, advantage: advantage)
+    }
+
+    private var maximumLengthDescription: String {
+        guard let maximum = ReplicatorErrorThresholdModel.maximumLength(errorRate: errorRate, advantage: advantage) else {
+            return L10n.text("lab.replicator.noLength", store.language)
+        }
+        return String(format: L10n.text("lab.replicator.maxLength", store.language), String(maximum))
+    }
+
+    var body: some View {
+        LabCard {
+            Text(L10n.text("lab.replicator.title", store.language))
+                .font(.headline)
+            Text(L10n.text("lab.replicator.hint", store.language))
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(String(format: L10n.text("lab.replicator.length", store.language), String(Int(length))))
+                    .monospacedDigit()
+                Slider(value: $length, in: ReplicatorErrorThresholdModel.lengthRange, step: 10)
+                    .accessibilityLabel(L10n.text("lab.replicator.lengthLabel", store.language))
+                    .accessibilityValue(Text(verbatim: String(Int(length))))
+                    .accessibilityIdentifier("lab.replicator.length")
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(String(format: L10n.text("lab.replicator.error", store.language), L10n.number(errorPercent, fractionDigits: 1, store.language)))
+                    .monospacedDigit()
+                Slider(value: $errorPercent, in: 0.1...5.0, step: 0.1)
+                    .accessibilityLabel(L10n.text("lab.replicator.errorLabel", store.language))
+                    .accessibilityValue(Text(String(format: L10n.text("lab.replicator.percentValue", store.language), L10n.number(errorPercent, fractionDigits: 1, store.language))))
+                    .accessibilityIdentifier("lab.replicator.error")
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(String(format: L10n.text("lab.replicator.advantage", store.language), String(Int(advantage))))
+                    .monospacedDigit()
+                Slider(value: $advantage, in: ReplicatorErrorThresholdModel.advantageRange, step: 1)
+                    .accessibilityLabel(L10n.text("lab.replicator.advantageLabel", store.language))
+                    .accessibilityValue(Text(verbatim: String(Int(advantage))))
+                    .accessibilityIdentifier("lab.replicator.advantage")
+            }
+
+            Text(String(format: L10n.text("lab.replicator.exactCopy", store.language), L10n.number(exactCopy * 100, fractionDigits: 1, store.language)))
+                .font(.callout.monospacedDigit())
+            Text(String(format: L10n.text("lab.replicator.offspring", store.language), L10n.number(offspring, fractionDigits: 2, store.language)))
+                .font(.headline.monospacedDigit())
+                .accessibilityIdentifier("lab.replicator.offspring")
+            offspringScale
+                .frame(height: 26)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(L10n.text("lab.replicator.scale", store.language))
+                .accessibilityValue(String(format: L10n.text("lab.replicator.offspring", store.language), L10n.number(offspring, fractionDigits: 2, store.language)))
+
+            Label(L10n.text(persists ? "lab.replicator.persists" : "lab.replicator.erased", store.language), systemImage: persists ? "checkmark.seal" : "exclamationmark.triangle")
+                .font(.callout.weight(.medium))
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("lab.replicator.outcome")
+            Text(maximumLengthDescription)
+                .font(.callout.monospacedDigit())
+                .accessibilityIdentifier("lab.replicator.maxLength")
+            Text(L10n.text("lab.replicator.limit", store.language))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // Exact offspring on a 0…2 scale with the survival line at 1 in the middle; larger values are capped.
+    private var offspringScale: some View {
+        GeometryReader { geometry in
+            let fraction = min(offspring, 2) / 2
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.secondary.opacity(0.12))
+                Capsule()
+                    .fill((persists ? Color.green : Color.orange).gradient)
+                    .frame(width: max(8, geometry.size.width * CGFloat(fraction)))
+                Rectangle()
+                    .fill(Color.primary.opacity(0.7))
+                    .frame(width: 2)
+                    .offset(x: geometry.size.width * 0.5)
             }
         }
     }

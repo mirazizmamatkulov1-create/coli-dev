@@ -2185,7 +2185,7 @@ enum L10n {
         "lab.replicator.advantage": ("Преимущество правильной молекулы σ: в %@ раз", "Advantage of the correct molecule σ: %@ times"),
         "lab.replicator.advantageLabel": ("Во сколько раз правильная молекула размножается быстрее", "How many times faster the correct molecule multiplies"),
         "lab.replicator.exactCopy": ("Точная копия всей молекулы: %@ %%", "Exact copy of the whole molecule: %@%%"),
-        "lab.replicator.offspring": ("Точных потомков на одну молекулу σ · (1 − e)^L: %@", "Exact offspring per molecule σ · (1 − e)^L: %@"),
+        "lab.replicator.offspring": ("Точных потомков на одну молекулу σ · (1 − e)ᴸ: %@", "Exact offspring per molecule σ · (1 − e)ᴸ: %@"),
         "lab.replicator.scale": ("Шкала точных потомков от 0 до 2, метка посередине — 1: выше неё информация сохраняется.", "Scale of exact offspring from 0 to 2; the middle mark is 1, above which the information survives."),
         "lab.replicator.persists": ("Информация сохраняется: правильная молекула оставляет больше одной точной копии.", "The information survives: the correct molecule leaves more than one exact copy."),
         "lab.replicator.erased": ("Информация стирается: точных копий меньше одной, и ошибки вытесняют правильную молекулу.", "The information is erased: there is less than one exact copy, and errors push out the correct molecule."),

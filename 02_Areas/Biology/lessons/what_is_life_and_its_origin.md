@@ -21,7 +21,7 @@ source_review_interval_days: 365
 
 Как жизнь возникла, точно не известно — это открытый научный вопрос. Но часть шагов проверена опытом. В 1953 году Стэнли Миллер пропускал электрические разряды через смесь газов, которую тогда считали похожей на древнюю атмосферу, и получил аминокислоты — строительные блоки белков — без участия живых организмов. Состав древней атмосферы сейчас оценивают иначе, но опыт показал главное: такие молекулы могут возникать сами. Уолтер Гилберт в 1986 году предложил идею «мира РНК»: РНК умеет и хранить информацию, как ДНК, и ускорять реакции, как белок, поэтому ранняя жизнь могла обходиться одной РНК. Самые древние надёжные следы жизни — слоистые постройки микробов, строматолиты, — найдены в породах возрастом около 3,4 млрд лет; более ранние находки пока спорны.
 
-Здесь есть ловушка, которую в 1971 году описал Манфред Эйген, — порог ошибок. Пусть молекула из L «букв» копирует каждую букву с ошибкой e. Тогда вся копия получается точной с вероятностью (1 − e)^L, и эта вероятность падает с длиной. Если правильная молекула размножается в σ раз быстрее испорченных копий, она удерживается в популяции, только пока σ · (1 − e)^L > 1. Иначе ошибки накапливаются, и информация стирается. Значит, длина «генома» ограничена точностью копирования: чтобы хранить больше, жизнь должна была копировать точнее — так в клетках появились ферменты, которые проверяют и исправляют копии.
+Здесь есть ловушка, которую в 1971 году описал Манфред Эйген, — порог ошибок. Пусть молекула из L «букв» копирует каждую букву с ошибкой e. Тогда вся копия получается точной с вероятностью (1 − e)ᴸ, и эта вероятность падает с длиной. Если правильная молекула размножается в σ раз быстрее испорченных копий, она удерживается в популяции, только пока σ · (1 − e)ᴸ > 1. Иначе ошибки накапливаются, и информация стирается. Значит, длина «генома» ограничена точностью копирования: чтобы хранить больше, жизнь должна была копировать точнее — так в клетках появились ферменты, которые проверяют и исправляют копии.
 
 Сегодня люди уже умеют собирать часть живого с нуля. В 2010 году команда Гибсона химически синтезировала геном бактерии и пересадила его в клетку другого вида — клетка стала работать по синтетическому геному. В 2016 году команда Хатчисона создала бактерию с минимальным геномом из 473 генов. Но в обоих случаях готовая клетка была взята у живого организма: собрать живую клетку полностью из неживых молекул пока не удалось никому.
 
@@ -35,7 +35,7 @@ source_review_interval_days: 365
 
 ### Варианты
 
-- Нет: точная копия выходит с вероятностью 0,99^300 ≈ 0,049, а 10 · 0,049 ≈ 0,49 меньше 1.
+- Нет: точная копия выходит с вероятностью 0,99³⁰⁰ ≈ 0,049, а 10 · 0,049 ≈ 0,49 меньше 1.
 - Да: 99 % букв копируются верно, этого достаточно.
 - Да: длина молекулы не влияет на точность копии.
 
@@ -63,7 +63,7 @@ There is no single undisputed definition of life, but every known living system 
 
 How life began is not known for certain; it is an open scientific question. But some steps have been tested by experiment. In 1953 Stanley Miller passed electric sparks through a gas mixture then thought to resemble the early atmosphere and obtained amino acids, the building blocks of proteins, without any living organism. Estimates of the early atmosphere have since changed, but the experiment showed the key point: such molecules can form on their own. In 1986 Walter Gilbert proposed the "RNA world": RNA can both store information, like DNA, and speed up reactions, like a protein, so early life might have run on RNA alone. The oldest reliable traces of life are layered microbial structures, stromatolites, in rocks about 3.4 billion years old; older finds are still debated.
 
-There is a trap here, described by Manfred Eigen in 1971: the error threshold. Suppose a molecule of L "letters" copies each letter with error rate e. Then a whole copy is exact with probability (1 − e)^L, and this probability falls with length. If the correct molecule multiplies σ times faster than faulty copies, it stays in the population only while σ · (1 − e)^L > 1. Otherwise errors pile up and the information is erased. So the length of a "genome" is limited by copying accuracy: to store more, life had to copy more accurately, and cells came to have enzymes that check and correct copies.
+There is a trap here, described by Manfred Eigen in 1971: the error threshold. Suppose a molecule of L "letters" copies each letter with error rate e. Then a whole copy is exact with probability (1 − e)ᴸ, and this probability falls with length. If the correct molecule multiplies σ times faster than faulty copies, it stays in the population only while σ · (1 − e)ᴸ > 1. Otherwise errors pile up and the information is erased. So the length of a "genome" is limited by copying accuracy: to store more, life had to copy more accurately, and cells came to have enzymes that check and correct copies.
 
 Today people can already build part of a living thing from scratch. In 2010 Gibson's team chemically synthesized a bacterial genome and transplanted it into a cell of another species; the cell came to run on the synthetic genome. In 2016 Hutchison's team made a bacterium with a minimal genome of 473 genes. In both cases, though, the recipient cell came from a living organism: no one has yet built a living cell entirely from non-living molecules.
 
@@ -77,7 +77,7 @@ A molecule of 300 letters copies each letter with a 1% error rate, and the corre
 
 ### Options
 
-- No: an exact copy comes out with probability 0.99^300 ≈ 0.049, and 10 · 0.049 ≈ 0.49 is less than 1.
+- No: an exact copy comes out with probability 0.99³⁰⁰ ≈ 0.049, and 10 · 0.049 ≈ 0.49 is less than 1.
 - Yes: 99% of letters are copied correctly, which is enough.
 - Yes: the length of the molecule does not affect copy accuracy.
 

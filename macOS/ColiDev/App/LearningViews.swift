@@ -11042,7 +11042,7 @@ private struct ReplicatorErrorThresholdLab: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(String(format: L10n.text("lab.replicator.length", store.language), String(Int(length))))
                     .monospacedDigit()
-                Slider(value: $length, in: ReplicatorErrorThresholdModel.lengthRange, step: 10)
+                Slider(value: snapped($length, to: 10), in: ReplicatorErrorThresholdModel.lengthRange)
                     .accessibilityLabel(L10n.text("lab.replicator.lengthLabel", store.language))
                     .accessibilityValue(Text(verbatim: String(Int(length))))
                     .accessibilityIdentifier("lab.replicator.length")
@@ -11050,7 +11050,7 @@ private struct ReplicatorErrorThresholdLab: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(String(format: L10n.text("lab.replicator.error", store.language), L10n.number(errorPercent, fractionDigits: 1, store.language)))
                     .monospacedDigit()
-                Slider(value: $errorPercent, in: 0.1...5.0, step: 0.1)
+                Slider(value: snapped($errorPercent, to: 0.1), in: 0.1...5.0)
                     .accessibilityLabel(L10n.text("lab.replicator.errorLabel", store.language))
                     .accessibilityValue(Text(String(format: L10n.text("lab.replicator.percentValue", store.language), L10n.number(errorPercent, fractionDigits: 1, store.language))))
                     .accessibilityIdentifier("lab.replicator.error")
@@ -11058,7 +11058,7 @@ private struct ReplicatorErrorThresholdLab: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(String(format: L10n.text("lab.replicator.advantage", store.language), String(Int(advantage))))
                     .monospacedDigit()
-                Slider(value: $advantage, in: ReplicatorErrorThresholdModel.advantageRange, step: 1)
+                Slider(value: snapped($advantage, to: 1), in: ReplicatorErrorThresholdModel.advantageRange)
                     .accessibilityLabel(L10n.text("lab.replicator.advantageLabel", store.language))
                     .accessibilityValue(Text(verbatim: String(Int(advantage))))
                     .accessibilityIdentifier("lab.replicator.advantage")
@@ -11087,6 +11087,14 @@ private struct ReplicatorErrorThresholdLab: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    // Rounds slider values without `step:`, which would draw a dense row of tick marks under each slider.
+    private func snapped(_ value: Binding<Double>, to increment: Double) -> Binding<Double> {
+        Binding(
+            get: { value.wrappedValue },
+            set: { value.wrappedValue = ($0 / increment).rounded() * increment }
+        )
     }
 
     // Exact offspring on a 0…2 scale with the survival line at 1 in the middle; larger values are capped.

@@ -30,8 +30,8 @@ def test_question_arithmetic_matches_the_error_threshold() -> None:
     assert math.floor(math.log(10) / -math.log(0.99)) == 229
 
     russian, english = _sections(LESSON.read_text(encoding="utf-8"))
-    assert "0,99^300 ≈ 0,049" in russian and "229 букв" in russian
-    assert "0.99^300 ≈ 0.049" in english and "229 letters" in english
+    assert "0,99³⁰⁰ ≈ 0,049" in russian and "229 букв" in russian
+    assert "0.99³⁰⁰ ≈ 0.049" in english and "229 letters" in english
     assert russian.split("### Ответ", 1)[1].split("###", 1)[0].strip() == "1"
     assert english.split("### Answer", 1)[1].split("###", 1)[0].strip() == "1"
 

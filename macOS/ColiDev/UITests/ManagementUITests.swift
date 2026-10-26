@@ -35,15 +35,25 @@ final class ManagementUITests: XCTestCase {
         let app = XCUIApplication()
         // A fixed catalog keeps the test off the rate-limited GitHub API. / Фиксированный каталог не зависит от лимитов GitHub API.
         app.launchEnvironment["COLIDEV_UI_TEST_RELEASES_JSON"] = """
-        [{"id": 9, "name": "ColiDev 0.1.0 Beta 9 / Бета 9", "tag_name": "v0.1.0-beta.9", "body": "",
-          "published_at": "2026-10-22T19:17:33Z",
-          "html_url": "https://github.com/mirazizmamatkulov1-create/coli-dev/releases/tag/v0.1.0-beta.9",
+        [{"id": 12, "name": "ColiDev 0.1.0 Beta 12 / Бета 12", "tag_name": "v0.1.0-beta.12", "body": "",
+          "published_at": "2026-10-25T15:33:03Z",
+          "html_url": "https://github.com/mirazizmamatkulov1-create/coli-dev/releases/tag/v0.1.0-beta.12",
           "draft": false, "prerelease": true,
           "assets": [
-            {"id": 91, "name": "ColiDev-beta-AppleSilicon.zip",
-             "browser_download_url": "https://github.com/mirazizmamatkulov1-create/coli-dev/releases/download/v0.1.0-beta.9/ColiDev-beta-AppleSilicon.zip"},
-            {"id": 92, "name": "ColiDev-beta-Intel.zip",
-             "browser_download_url": "https://github.com/mirazizmamatkulov1-create/coli-dev/releases/download/v0.1.0-beta.9/ColiDev-beta-Intel.zip"}
+            {"id": 121, "name": "ColiDev-beta-AppleSilicon.zip",
+             "browser_download_url": "https://github.com/mirazizmamatkulov1-create/coli-dev/releases/download/v0.1.0-beta.12/ColiDev-beta-AppleSilicon.zip"},
+            {"id": 122, "name": "ColiDev-beta-Intel.zip",
+             "browser_download_url": "https://github.com/mirazizmamatkulov1-create/coli-dev/releases/download/v0.1.0-beta.12/ColiDev-beta-Intel.zip"}
+          ]},
+         {"id": 11, "name": "ColiDev 0.1.0 Beta 11 / Бета 11", "tag_name": "v0.1.0-beta.11", "body": "",
+          "published_at": "2026-10-24T12:47:15Z",
+          "html_url": "https://github.com/mirazizmamatkulov1-create/coli-dev/releases/tag/v0.1.0-beta.11",
+          "draft": false, "prerelease": true,
+          "assets": [
+            {"id": 111, "name": "ColiDev-beta-AppleSilicon.zip",
+             "browser_download_url": "https://github.com/mirazizmamatkulov1-create/coli-dev/releases/download/v0.1.0-beta.11/ColiDev-beta-AppleSilicon.zip"},
+            {"id": 112, "name": "ColiDev-beta-Intel.zip",
+             "browser_download_url": "https://github.com/mirazizmamatkulov1-create/coli-dev/releases/download/v0.1.0-beta.11/ColiDev-beta-Intel.zip"}
           ]}]
         """
         app.launch()
@@ -52,10 +62,10 @@ final class ManagementUITests: XCTestCase {
         XCTAssertTrue(settingsItem.waitForExistence(timeout: 15))
         settingsItem.click()
 
-        let release = app.descendants(matching: .any)["settings.updates.release.v0.1.0-beta.9"]
+        let release = app.descendants(matching: .any)["settings.updates.release.v0.1.0-beta.12"]
         XCTAssertTrue(
             release.waitForExistence(timeout: 30),
-            "The published Beta 9 release must appear in the catalog. / Опубликованная Beta 9 должна отображаться в каталоге.")
+            "The published Beta 12 release must appear in the catalog. / Опубликованная Beta 12 должна отображаться в каталоге.")
 
         let settingsScrollView = app.windows.firstMatch.scrollViews.element(boundBy: 1)
         XCTAssertTrue(settingsScrollView.waitForExistence(timeout: 5))
@@ -64,10 +74,24 @@ final class ManagementUITests: XCTestCase {
         // Each release title is a button that expands its row.
         release.click()
 
-        let download = app.links["settings.updates.download.v0.1.0-beta.9"]
+        let download = app.links["settings.updates.download.v0.1.0-beta.12"]
         XCTAssertTrue(
             download.waitForExistence(timeout: 10),
             "The catalog must expose the archive for the running Mac architecture. / Каталог должен показывать архив для архитектуры этого Mac.\n\(app.debugDescription)")
+
+        // Beta 9–11 crash at launch: the row warns instead of offering the archive.
+        let brokenRelease = app.descendants(matching: .any)["settings.updates.release.v0.1.0-beta.11"]
+        XCTAssertTrue(brokenRelease.waitForExistence(timeout: 10))
+        scrollUntilHittable(brokenRelease, in: settingsScrollView)
+        brokenRelease.click()
+
+        let warning = app.descendants(matching: .any)["settings.updates.issue.v0.1.0-beta.11"]
+        XCTAssertTrue(
+            warning.waitForExistence(timeout: 10),
+            "A build that crashes at launch must carry a warning. / Сборка, которая падает при запуске, должна быть помечена.\n\(app.debugDescription)")
+        XCTAssertFalse(
+            app.links["settings.updates.download.v0.1.0-beta.11"].exists,
+            "A build that crashes at launch must not be offered for download. / Сборку, которая падает при запуске, нельзя предлагать для скачивания.")
     }
 
     @MainActor
@@ -435,8 +459,9 @@ final class ManagementUITests: XCTestCase {
             state.waitForExistence(timeout: 15),
             "The gradient descent lesson must show its own lab. / Урок о градиентном спуске должен показывать свой тренажёр.\n\(app.debugDescription)"
         )
+        let stateText = accessibleText(of: state)
         XCTAssertTrue(
-            accessibleText(of: state).contains("1.988"),
+            stateText.contains("1.988") || stateText.contains("1,988"),
             "Five iterations at η = 0.05 must reach w ≈ 1.988. / Пять итераций при η = 0,05 должны дать w ≈ 1,988.\n\(state.debugDescription)"
         )
     }
@@ -837,29 +862,20 @@ final class ManagementUITests: XCTestCase {
         app.launch()
         app.activate()
 
+        // The saved answer after the video is shown straight away: the learner does not consent to YouTube,
+        // confirm watching or answer the check again. / Сохранённый ответ виден сразу, без повторного согласия и проверки.
         let restoredConsent = app.buttons["lesson.video.enablePlayback"]
         XCTAssertTrue(restoredConsent.waitForExistence(timeout: 10))
         let restoredLessonScrollView = app.scrollViews["lesson.scrollView"]
         XCTAssertTrue(restoredLessonScrollView.waitForExistence(timeout: 5))
-        scrollUntilHittable(restoredConsent, in: restoredLessonScrollView)
-        restoredConsent.click()
-        if restoredConsent.exists && restoredConsent.isHittable {
-            restoredConsent.click()
-        }
-        let restoredMarkWatched = app.buttons["lesson.video.markWatched"]
-        XCTAssertTrue(restoredMarkWatched.waitForExistence(timeout: 10))
-        scrollUntilHittable(restoredMarkWatched, in: restoredLessonScrollView)
-        restoredMarkWatched.click()
-        if restoredMarkWatched.exists && restoredMarkWatched.isHittable {
-            restoredMarkWatched.click()
-        }
-
-        let restoredKnowledgeAnswer = app.buttons["lesson.check.option.0"]
-        scrollUntilHittable(restoredKnowledgeAnswer, in: restoredLessonScrollView)
-        restoredKnowledgeAnswer.click()
+        XCTAssertFalse(app.descendants(matching: .any)["lesson.video.player"].exists)
+        XCTAssertFalse(app.buttons["lesson.video.markWatched"].exists)
 
         let restoredResponse = app.descendants(matching: .any)["lesson.video.response"]
-        XCTAssertTrue(restoredResponse.waitForExistence(timeout: 10))
+        XCTAssertTrue(
+            restoredResponse.waitForExistence(timeout: 10),
+            "A saved answer after the video must be visible as soon as the lesson opens. / Сохранённый ответ после видео должен быть виден сразу при открытии урока.\n\(app.debugDescription)")
+        XCTAssertTrue(app.staticTexts["lesson.video.after"].exists)
         XCTAssertEqual(
             restoredResponse.value as? String,
             draft,

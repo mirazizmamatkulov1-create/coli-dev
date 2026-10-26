@@ -2532,11 +2532,8 @@ private struct ManagementView: View {
                     VStack(spacing: 10) {
                         statusRow(
                             title: L10n.text("management.network", store.language),
-                            value: L10n.text(
-                                store.aiHealth?.online == true ? "management.networkOnline" : "management.networkOffline",
-                                store.language
-                            ),
-                            symbol: store.aiHealth?.online == true ? "network" : "wifi.slash"
+                            value: L10n.text(networkStatus.key, store.language),
+                            symbol: networkStatus.symbol
                         )
                         statusRow(
                             title: L10n.text("management.indexChecked", store.language),
@@ -3414,6 +3411,18 @@ private struct ManagementView: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .coliGlassControl(cornerRadius: 16)
+    }
+
+    // Until the backend answers, the network state is unknown rather than offline.
+    private var networkStatus: (key: String, symbol: String) {
+        switch store.aiHealth?.online {
+        case true?:
+            return ("management.networkOnline", "network")
+        case false?:
+            return ("management.networkOffline", "wifi.slash")
+        case nil:
+            return (store.isCheckingAI ? "management.networkChecking" : "management.networkUnknown", "network")
+        }
     }
 
     private var dailyOnlineLimitSummary: String {

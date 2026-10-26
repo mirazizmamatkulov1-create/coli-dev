@@ -3342,6 +3342,8 @@ class TestStreamingChat:
             patch("orchestrator.ConsiliumEngine", return_value=engine),
             patch("orchestrator._retrieve_local_course_sources", AsyncMock(return_value=[local_source])),
             patch("orchestrator._retrieve_obsidian_sources", AsyncMock(return_value=[])),
+            # The real monitor reads official snapshots from the learner's own index.
+            patch("orchestrator._retrieve_licensed_official_sources", AsyncMock(return_value=[])),
         ):
             response = client.post("/chat/stream", json={
                 "message": "Explain this function",

@@ -60,6 +60,35 @@ def test_keyword_only_retrieval_baseline_runs_offline() -> None:
     assert summary["hit_at_4"] >= 0.5
 
 
+def test_eval_stops_instead_of_scoring_a_keyword_fallback_as_semantic(monkeypatch, tmp_path) -> None:
+    project = tmp_path / "project"
+    lesson = project / "02_Areas" / "Physics" / "lessons" / "heat.md"
+    lesson.parent.mkdir(parents=True)
+    lesson.write_text("# Heat\n\nQ = mcΔT gives the heat needed to warm water.\n", encoding="utf-8")
+
+    class ModelRemovedMidRun:
+        """Embeds the corpus, then fails like Ollama after its model is deleted."""
+
+        def __init__(self, base_url: str, model: str, timeout_seconds: float = 12) -> None:
+            self.model = f"fake:{model}"
+
+        def embed(self, texts: list[str]) -> list[list[float]]:
+            return [[1.0, 0.0] for _ in texts]
+
+        def embed_query(self, text: str) -> list[list[float]]:
+            raise ConnectionError("model 'bge-m3:latest' not found")
+
+    monkeypatch.setattr(rag_eval, "OllamaEmbeddingProvider", ModelRemovedMidRun)
+    question = {
+        "id": "heat", "lang": "en", "subject": "physics",
+        "question": "How much heat warms water?",
+        "relevant": ["02_Areas/Physics/lessons/heat.md"],
+    }
+
+    with pytest.raises(RuntimeError, match="fell back to keywords"):
+        rag_eval.run(embedding_model="bge-m3:latest", questions=[question], project_root=project)
+
+
 @pytest.mark.skipif(
     os.environ.get("COLIDEV_RAG_EVAL_OLLAMA") != "1",
     reason="Set COLIDEV_RAG_EVAL_OLLAMA=1 to embed the course with local Ollama bge-m3 (about 2 minutes)",

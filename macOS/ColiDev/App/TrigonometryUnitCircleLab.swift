@@ -173,16 +173,14 @@ struct TrigonometryUnitCircleLab: View {
     }
 
     private var angleDescription: String {
-        let locale = Locale(identifier: store.language == .ru ? "ru_RU" : "en_US_POSIX")
-        let radians = String(format: "%.2f", locale: locale, angleRadians)
-        let degrees = String(format: "%.1f", locale: locale, model.angleDegrees)
+        let radians = L10n.number(angleRadians, fractionDigits: 2, store.language)
+        let degrees = L10n.number(model.angleDegrees, fractionDigits: 1, store.language)
         return String(format: L10n.text("lab.trigonometry.angleValue", store.language), radians, degrees)
     }
 
     private var coordinateDescription: String {
-        let locale = Locale(identifier: store.language == .ru ? "ru_RU" : "en_US_POSIX")
-        let x = String(format: "%.3f", locale: locale, model.xCoordinate)
-        let y = String(format: "%.3f", locale: locale, model.yCoordinate)
+        let x = L10n.number(model.xCoordinate, fractionDigits: 3, store.language)
+        let y = L10n.number(model.yCoordinate, fractionDigits: 3, store.language)
         return String(format: L10n.text("lab.trigonometry.coordinates", store.language), x, y)
     }
 
@@ -191,8 +189,7 @@ struct TrigonometryUnitCircleLab: View {
     }
 
     private var answerExplanation: String {
-        let locale = Locale(identifier: store.language == .ru ? "ru_RU" : "en_US_POSIX")
-        let sine = String(format: "%.3f", locale: locale, model.yCoordinate)
+        let sine = L10n.number(model.yCoordinate, fractionDigits: 3, store.language)
         return String(
             format: L10n.text(model.sineSign.explanationKey, store.language),
             angleDescription,
@@ -266,7 +263,7 @@ private struct UnitCircleDiagram: View {
     }
 
     private func decimal(_ value: Double) -> String {
-        String(format: "%.3f", locale: Locale(identifier: language == .ru ? "ru_RU" : "en_US_POSIX"), value)
+        L10n.number(value, fractionDigits: 3, language)
     }
 }
 

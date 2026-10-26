@@ -16,9 +16,9 @@ enum L10n {
         "lesson.intro.unavailable.title": ("Вводный урок недоступен", "Intro lesson unavailable"),
         "lesson.intro.unavailable.message": ("Учебный файл не найден или не читается. Чтобы не подменять его старой копией без источников, мы скрыли урок. Вернись к предмету; если проблема повторится, обнови приложение или сообщи команде.", "The lesson file is missing or unreadable. To avoid substituting an old copy without sources, the lesson is hidden. Return to the subject; if the problem persists, update the app or tell the team."),
         "lesson.intro.unavailable.back": ("К предмету", "Back to subject"),
-        "home.knowledgeChecks": ("Проверки записаны: %d из %d тем", "Assessment evidence recorded: %d of %d topics"),
+        "home.knowledgeChecks": ("Темы с записанной проверкой: %d из %d", "Assessment evidence recorded: %d of %d topics"),
         "home.knowledgeEvidenceVariety": ("Темы с 2+ типами заданий: %d из %d", "Topics with 2+ task types: %d of %d"),
-        "home.knowledgeNeedPractice": ("После последней проверки нужно закрепить: %d тем", "Topics to reinforce after the last check: %d"),
+        "home.knowledgeNeedPractice": ("Тем для закрепления после последней проверки: %d", "Topics to reinforce after the last check: %d"),
         "home.knowledgeChecksUnavailable": ("Темы учебного плана пока недоступны для подсчёта проверок", "No roadmap topics are available for check coverage yet"),
         "home.knowledgeEvidenceLimit": ("Эти числа описывают пройденные проверки, разнообразие заданий и темы для закрепления; это не оценка освоения. Одно задание не доказывает общее понимание темы.", "These counts describe completed checks, task variety, and topics to reinforce; they are not a mastery score. One task does not prove overall understanding of a topic."),
         "home.reportedDifficulties": ("Отмеченные тобой трудности в последних проверках:", "Difficulties you reported in the latest checks:"),
@@ -322,7 +322,7 @@ enum L10n {
         "lab.trigonometry.graphAccessibility": ("Графики синуса и косинуса от минус двух пи до двух пи. Метка показывает текущий угол.", "Sine and cosine graphs from minus two pi to two pi. The marker shows the current angle."),
         "lab.trigonometry.angle": ("Угол θ", "Angle θ"),
         "lab.trigonometry.angleValue": ("%@ рад · %@°", "%@ rad · %@°"),
-        "lab.trigonometry.coordinates": ("Точка (cos θ, sin θ) = (%@, %@)", "Point (cos θ, sin θ) = (%@, %@)"),
+        "lab.trigonometry.coordinates": ("Точка (cos θ; sin θ) = (%@; %@)", "Point (cos θ, sin θ) = (%@, %@)"),
         "lab.trigonometry.question": ("Проверь прогноз", "Check your prediction"),
         "lab.trigonometry.questionAngle": ("При %@ какой знак у sin θ?", "At %@, what is the sign of sin θ?"),
         "lab.trigonometry.option.negative": ("Отрицательный", "Negative"),
@@ -342,13 +342,13 @@ enum L10n {
         "lab.optimization.constraint": ("Ограничение", "Constraint"),
         "lab.optimization.candidates": ("Стационарные направления", "Stationary directions"),
         "lab.optimization.selected": ("Текущая точка", "Selected point"),
-        "lab.optimization.point": ("Точка: (%.3f, %.3f)", "Point: (%.3f, %.3f)"),
-        "lab.optimization.objective": ("Цель xy: %.3f", "Objective xy: %.3f"),
-        "lab.optimization.derivative": ("Изменение xy вдоль окружности: %.3f", "Rate of change of xy along the circle: %.3f"),
+        "lab.optimization.point": ("Точка: (%@; %@)", "Point: (%@, %@)"),
+        "lab.optimization.objective": ("Цель xy: %@", "Objective xy: %@"),
+        "lab.optimization.derivative": ("Изменение xy вдоль окружности: %@", "Rate of change of xy along the circle: %@"),
         "lab.optimization.nonStationary": ("Точка допустима, но не стационарна: движение по окружности меняет значение xy.", "The point is feasible but not stationary: moving along the circle changes xy."),
         "lab.optimization.maximum": ("Стационарный максимум: значение xy равно 1/2.", "Stationary maximum: xy equals 1/2."),
         "lab.optimization.minimum": ("Стационарный минимум: значение xy равно −1/2.", "Stationary minimum: xy equals −1/2."),
-        "lab.optimization.multiplier": ("Множитель λ в этой точке: %.3f", "Lagrange multiplier λ at this point: %.3f"),
+        "lab.optimization.multiplier": ("Множитель λ в этой точке: %@", "Lagrange multiplier λ at this point: %@"),
         "lab.optimization.limits": ("Это двумерная учебная модель для гладкого равенства. Цветные точки показывают кандидатов; метод Лагранжа сам по себе не классифицирует кандидата без сравнения значений.", "This is a two-dimensional teaching model for a smooth equality. Colored points mark candidates; Lagrange's method does not classify them without comparing values."),
         "lab.slope": ("Наклон", "Slope"),
         "lab.force": ("Сила", "Force"),
@@ -508,7 +508,7 @@ enum L10n {
         "lab.momentumHint": ("Меняй массы и знаковые скорости тележек. Сравни идеально неупругое столкновение со слипанием и идеальное упругое, где тележки разлетаются.", "Change the carts' masses and signed velocities. Compare a perfectly inelastic collision, where they stick, with an ideal elastic collision, where they separate."),
         "lab.momentumCart": ("Тележка %d · %.0f кг", "Cart %d · %.0f kg"),
         "lab.momentumJoinedMass": ("Вместе · %.0f кг", "Joined · %.0f kg"),
-        "lab.momentumVelocity": ("v = %.1f м/с", "v = %.1f m/s"),
+        "lab.momentumVelocity": ("v = %@", "v = %@"),
         "lab.momentumCanvas": ("Схема одномерного столкновения тележек; стрелки показывают направление и относительную величину скорости.", "One-dimensional cart collision diagram; arrows show velocity direction and relative magnitude."),
         "lab.equation.title": ("Сохрани равновесие уравнения", "Keep the equation balanced"),
         "lab.equation.help": ("Решай по одному шагу: выбери обратную операцию и примени её к обеим сторонам равенства.", "Solve one step at a time: choose the inverse operation and apply it to both sides of the equation."),
@@ -534,7 +534,7 @@ enum L10n {
         "lab.percent.share": ("Процентная доля", "Percentage share"),
         "lab.percent.bar": ("Заполнено: %@", "Filled: %@"),
         "lab.percent.whole": ("Целое", "Whole"),
-        "lab.percent.part": ("Эта часть: %.0f единиц", "This part: %.0f units"),
+        "lab.percent.part": ("Эта часть: %.0f ед.", "This part: %.0f units"),
         "lab.percent.unitsTitle": ("Преобразование единиц длины", "Length unit conversion"),
         "lab.percent.kilometres": ("Расстояние, км", "Distance, km"),
         "lab.percent.unitEquation": ("%1 км = %2 м", "%1 km = %2 m"),
@@ -777,7 +777,7 @@ enum L10n {
         "lab.rationalHint": ("Меняй x и сравнивай исходную дробь с сокращённой формулой. Следи за значением, запрещённым исходным знаменателем.", "Change x and compare the original fraction with its reduced form. Watch for the input excluded by the original denominator."),
         "lab.rationalFormula": ("Функция f от x равна x в квадрате минус девять, делённое на x минус три.", "The function f of x is x squared minus nine divided by x minus three."),
         "lab.rationalInput": ("Значение x от минус пяти до пяти с шагом четверть", "Value of x from minus five to five in quarter-unit steps"),
-        "lab.rationalSelectedInput": ("x = %.2f", "x = %.2f"),
+        "lab.rationalSelectedInput": ("x = %@", "x = %@"),
         "lab.rationalOriginal": ("Исходная дробь", "Original fraction"),
         "lab.rationalReduced": ("После сокращения: x + 3", "After reducing: x + 3"),
         "lab.rationalUndefined": ("не определена", "undefined"),
@@ -1516,6 +1516,8 @@ enum L10n {
         "updates.expanded": ("Развёрнуто", "Expanded"),
         "updates.collapsed": ("Свёрнуто", "Collapsed"),
         "updates.unknownVersion": ("Версия не указана", "Version unavailable"),
+        "updates.issue.crashesAtLaunch.badge": ("Не запускается", "Does not launch"),
+        "updates.issue.crashesAtLaunch.message": ("Эта версия падает при запуске — используйте Beta 12 или новее. Ссылка на скачивание скрыта.", "This build crashes at launch — use Beta 12 or later. The download link is hidden."),
         "management.title": ("Центр управления ColiDev", "ColiDev Control Center"),
         "management.subtitle": ("Курсы, официальные источники и состояние локального ИИ в одном месте.", "Courses, official sources, and local AI status in one place."),
         "management.overview": ("Обзор", "Overview"),
@@ -1567,7 +1569,7 @@ enum L10n {
         "management.courseCoverageLoading": ("Считаю покрытие курсов в фоне…", "Calculating course coverage in the background…"),
         "management.courseCoverageEmpty": ("Сводка курсов пока недоступна.", "Course coverage is not available yet."),
         "management.courseSubjectSummary": ("Двуязычных уроков: %d / %d · структура полна: %d · тем: %d", "Bilingual lessons: %d / %d · complete structure: %d · roadmap topics: %d"),
-        "management.courseLevelSummary": ("Связано уроков: %d / %d тем", "%d / %d topics linked to full lessons"),
+        "management.courseLevelSummary": ("Темы, связанные с уроками: %d / %d", "%d / %d topics linked to full lessons"),
         "management.courseStructureIssues": ("Пробелов по урокам: %d", "Lessons with gaps: %d"),
         "management.courseStructureComplete": ("Структурных пробелов не найдено", "No structural gaps found"),
         "management.courseStructureResource": ("Урок: %@", "Lesson: %@"),
@@ -1591,8 +1593,8 @@ enum L10n {
         "lab.derivativeFunction": ("Парабола", "Parabola"),
         "lab.derivativeSecant": ("Секущая", "Secant"),
         "lab.derivativeTangent": ("Касательная", "Tangent"),
-        "lab.derivativeSecantValue": ("Наклон секущей: %.2f", "Secant slope: %.2f"),
-        "lab.derivativeTangentValue": ("Наклон касательной f′(x): %.2f", "Tangent slope f′(x): %.2f"),
+        "lab.derivativeSecantValue": ("Наклон секущей: %@", "Secant slope: %@"),
+        "lab.derivativeTangentValue": ("Наклон касательной f′(x): %@", "Tangent slope f′(x): %@"),
         "lab.linear.prompt": ("Меняй наклон m, начальное значение b и вход x. Сначала спрогнозируй выход y, затем проверь его по графику и формуле y = mx + b.", "Change the slope m, starting value b, and input x. Predict the output y first, then check it against the graph and formula y = mx + b."),
         "lab.linear.graph": ("График прямой y = mx + b. Бирюзовая точка показывает выбранный вход x.", "Graph of the line y = mx + b. The teal point marks the selected input x."),
         "lab.linear.formula": ("Формула функции: %@", "Function formula: %@"),
@@ -1642,6 +1644,8 @@ enum L10n {
         "management.backendUnavailable": ("Не отвечает", "Unavailable"),
         "management.networkOnline": ("Онлайн доступен", "Online access available"),
         "management.networkOffline": ("Работает офлайн", "Offline mode"),
+        "management.networkChecking": ("Проверяю…", "Checking…"),
+        "management.networkUnknown": ("Пока неизвестно", "Not known yet"),
         "management.indexedDocuments": ("Материалов в индексе", "Indexed materials"),
         "management.sourcesTotal": ("Официальных ссылок", "Official references"),
         "management.sourcesAttention": ("Ссылки без проверки или с предупреждением", "Unchecked or flagged source links"),
@@ -2063,9 +2067,9 @@ enum L10n {
         "lab.holdout.limit": ("12 отложенных примеров — слишком мало для надёжного вывода: один пример меняет точность примерно на 8 процентных пунктов. В настоящем эксперименте берут больше данных и кросс-валидацию.", "Twelve held-out examples are too few for a reliable conclusion: one example changes accuracy by about 8 percentage points. Real experiments use more data and cross-validation."),
         "lab.neuron.title": ("Порог и потенциал действия", "Threshold and the action potential"),
         "lab.neuron.hint": ("Стимул сдвигает мембрану от потенциала покоя −70 мВ. Сначала предскажи, возникнет ли потенциал действия, затем двигай ползунок.", "A stimulus shifts the membrane from the −70 mV resting potential. Predict whether an action potential will fire, then move the slider."),
-        "lab.neuron.stimulus": ("Стимул +%d мВ → мембрана %d мВ", "Stimulus +%d mV → membrane %d mV"),
+        "lab.neuron.stimulus": ("Стимул +%d мВ → мембрана %@", "Stimulus +%d mV → membrane %@"),
         "lab.neuron.stimulusLabel": ("Сила стимула", "Stimulus strength"),
-        "lab.neuron.potentialValue": ("мембрана %d мВ", "membrane %d mV"),
+        "lab.neuron.potentialValue": ("мембрана %@", "membrane %@"),
         "lab.neuron.thresholdLine": ("порог −55 мВ", "threshold −55 mV"),
         "lab.neuron.restLine": ("покой −70 мВ", "rest −70 mV"),
         "lab.neuron.fires": ("Порог достигнут: возникает потенциал действия с пиком около +40 мВ. Более сильный стимул в этой модели не делает пик выше — это принцип «всё или ничего».", "Threshold reached: an action potential fires with a peak near +40 mV. In this model a stronger stimulus does not raise the peak; this is the all-or-none principle."),
@@ -2143,7 +2147,7 @@ enum L10n {
         "lab.gd.rate": ("Шаг обучения", "Learning rate"),
         "lab.gd.steps": ("Итераций: %d", "Iterations: %d"),
         "lab.gd.stepsLabel": ("Число итераций", "Number of iterations"),
-        "lab.gd.state": ("w = %.3f · ошибка (MSE) = %.3f", "w = %.3f · error (MSE) = %.3f"),
+        "lab.gd.state": ("w = %@ · ошибка (MSE) = %@", "w = %@ · error (MSE) = %@"),
         "lab.gd.chart": ("Столбцы — ошибка после каждой итерации, логарифмическая шкала над минимумом.", "Bars show the error after each iteration on a logarithmic scale above the minimum."),
         "lab.gd.converges": ("Сходится: каждый шаг уменьшает ошибку, w приближается к минимуму.", "Converges: every step lowers the error and w approaches the minimum."),
         "lab.gd.oscillates": ("Сходится с колебаниями: шаг перепрыгивает минимум, но каждый раз всё ближе к нему.", "Converges with oscillation: each step overshoots the minimum but lands closer to it."),
@@ -2154,7 +2158,9 @@ enum L10n {
         "lab.synapse.hint": ("Задай, сколько возбуждающих и тормозящих синапсов сработало почти одновременно. Сначала предскажи, дойдёт ли мембрана до порога −55 мВ.", "Set how many excitatory and inhibitory synapses fire at about the same time. Predict first whether the membrane reaches the −55 mV threshold."),
         "lab.synapse.excitatory": ("Возбуждающие сигналы (+4 мВ): %d", "Excitatory inputs (+4 mV): %d"),
         "lab.synapse.inhibitory": ("Тормозящие сигналы (−4 мВ): %d", "Inhibitory inputs (−4 mV): %d"),
-        "lab.synapse.potential": ("Мембрана у аксонного холмика: %d мВ", "Membrane at the axon hillock: %d mV"),
+        "lab.synapse.excitatoryLabel": ("Возбуждающие сигналы, по +4 мВ", "Excitatory inputs, +4 mV each"),
+        "lab.synapse.inhibitoryLabel": ("Тормозящие сигналы, по −4 мВ", "Inhibitory inputs, −4 mV each"),
+        "lab.synapse.potential": ("Мембрана у аксонного холмика: %@", "Membrane at the axon hillock: %@"),
         "lab.synapse.scale": ("Шкала мембранного потенциала от −94 до −46 мВ, оранжевая метка — порог −55 мВ.", "Membrane potential scale from −94 to −46 mV; the orange mark is the −55 mV threshold."),
         "lab.synapse.fires": ("Порог достигнут: суммарный сдвиг запускает потенциал действия.", "Threshold reached: the net shift fires an action potential."),
         "lab.synapse.noFire": ("Порог не достигнут: тормозящие сигналы или слишком малое число возбуждающих не дают дойти до −55 мВ.", "Threshold not reached: inhibitory inputs or too few excitatory ones keep the membrane below −55 mV."),
@@ -2162,11 +2168,11 @@ enum L10n {
         "lab.pendulum.title": ("Период маятника", "Pendulum period"),
         "lab.pendulum.hint": ("Меняй длину нити и массу груза. Сначала предскажи, от чего зависит период малых колебаний, затем проверь по числам и по качанию.", "Change the string length and the bob's mass. Predict first what the period of small swings depends on, then check the numbers and the swing."),
         "lab.pendulum.diagram": ("Маятник: длина нити показана в масштабе, размер груза — его масса.", "Pendulum: string length is drawn to scale, and the bob's size shows its mass."),
-        "lab.pendulum.length": ("Длина нити L = %.2f м", "String length L = %.2f m"),
+        "lab.pendulum.length": ("Длина нити L = %@", "String length L = %@"),
         "lab.pendulum.lengthLabel": ("Длина нити", "String length"),
-        "lab.pendulum.mass": ("Масса груза m = %.1f кг", "Bob mass m = %.1f kg"),
+        "lab.pendulum.mass": ("Масса груза m = %@", "Bob mass m = %@"),
         "lab.pendulum.massLabel": ("Масса груза", "Bob mass"),
-        "lab.pendulum.reading": ("Период T = %.2f с · частота f = %.2f Гц", "Period T = %.2f s · frequency f = %.2f Hz"),
+        "lab.pendulum.reading": ("Период T = %@ · частота f = %@", "Period T = %@ · frequency f = %@"),
         "lab.pendulum.swing": ("Показать качание", "Show the swing"),
         "lab.pendulum.challenge": ("Задача: сравни L = 0,25 м и L = 1,00 м. Предскажи, во сколько раз изменится период, затем проверь: 1,00 с и 2,01 с — ровно вдвое, потому что T ∝ √L.", "Challenge: compare L = 0.25 m and L = 1.00 m. Predict how many times the period changes, then check: 1.00 s and 2.01 s — exactly twice, because T ∝ √L."),
         "lab.pendulum.limit": ("Формула T = 2π√(L/g) верна для малых углов, примерно до 15°; здесь амплитуда 10°. Нить считается нерастяжимой и невесомой, сопротивление воздуха не учитывается, g = 9,81 м/с².", "T = 2π√(L/g) holds for small angles, up to about 15°; the amplitude here is 10°. The string is treated as massless and inextensible, air resistance is ignored, and g = 9.81 m/s²."),
@@ -2174,12 +2180,12 @@ enum L10n {
         "lab.heat.hint": ("Задай массу и температуру двух порций воды в теплоизолированном сосуде. Сначала предскажи температуру смеси, затем проверь.", "Set the mass and temperature of two portions of water in an insulated container. Predict the mixture's temperature first, then check."),
         "lab.heat.first": ("Первая порция", "First portion"),
         "lab.heat.second": ("Вторая порция", "Second portion"),
-        "lab.heat.mass": ("m = %.1f кг", "m = %.1f kg"),
+        "lab.heat.mass": ("m = %@", "m = %@"),
         "lab.heat.massLabel": ("масса", "mass"),
         "lab.heat.temperature": ("T = %.0f °C", "T = %.0f °C"),
         "lab.heat.temperatureLabel": ("температура", "temperature"),
-        "lab.heat.result": ("Температура смеси: %.1f °C", "Mixture temperature: %.1f °C"),
-        "lab.heat.transfer": ("Передано теплоты: %.1f кДж (Q = mcΔT, c = 4186 Дж/(кг·°C))", "Heat transferred: %.1f kJ (Q = mcΔT, c = 4186 J/(kg·°C))"),
+        "lab.heat.result": ("Температура смеси: %@", "Mixture temperature: %@"),
+        "lab.heat.transfer": ("Передано теплоты: %@ (Q = mcΔT, c = 4186 Дж/(кг·°C))", "Heat transferred: %@ (Q = mcΔT, c = 4186 J/(kg·°C))"),
         "lab.heat.scale": ("Шкала 0–100 °C: серые метки — начальные температуры, цветная — температура смеси.", "0–100 °C scale: grey marks show the starting temperatures, the coloured mark the mixture."),
         "lab.heat.challenge": ("Задача: смешай 1 кг при 20 °C и 1 кг при 80 °C, затем 2 кг при 20 °C и 1 кг при 80 °C. Предскажи обе температуры и проверь: 50 °C и 40 °C.", "Challenge: mix 1 kg at 20 °C with 1 kg at 80 °C, then 2 kg at 20 °C with 1 kg at 80 °C. Predict both temperatures, then check: 50 °C and 40 °C."),
         "lab.heat.limit": ("Модель считает, что тепло не уходит в сосуд и воздух, вода не испаряется и не кипит, а удельная теплоёмкость постоянна. Формула верна только для двух порций одного вещества.", "The model assumes no heat goes to the container or air, the water neither evaporates nor boils, and the specific heat is constant. The formula applies only to two portions of the same substance."),
@@ -2224,5 +2230,56 @@ enum L10n {
     static func text(_ key: String, _ language: AppLanguage) -> String {
         guard let pair = strings[key] else { return key }
         return language == .ru ? pair.ru : pair.en
+    }
+}
+
+// Numbers and SI units shown to the learner. Russian uses a decimal comma and Cyrillic unit symbols
+// (м, Н, кг, с); English keeps the decimal point and Latin symbols. Negative values get a true minus
+// sign (−) so readings match the lesson text, and no thousands separators are added.
+extension L10n {
+    private static let russianUnitSymbols: [String: String] = [
+        "m": "м",
+        "cm": "см",
+        "km": "км",
+        "m²": "м²",
+        "s": "с",
+        "kg": "кг",
+        "N": "Н",
+        "J": "Дж",
+        "kJ": "кДж",
+        "m/s": "м/с",
+        "m/s²": "м/с²",
+        "kg·m/s": "кг·м/с",
+        "Hz": "Гц",
+        "mV": "мВ"
+    ]
+
+    /// Fixed-point number in the interface language: `number(-2.5, fractionDigits: 2, .ru)` → "−2,50".
+    static func number(_ value: Double, fractionDigits: Int, _ language: AppLanguage) -> String {
+        var text = String(format: "%.\(max(fractionDigits, 0))f", locale: Locale(identifier: "en_US_POSIX"), value)
+        if text.hasPrefix("-") {
+            text.removeFirst()
+            // Rounding can turn a tiny negative value into "-0.00"; that is zero, not "−0,00".
+            if text.contains(where: { $0 != "0" && $0 != "." }) {
+                text = "\u{2212}" + text
+            }
+        }
+        return language == .ru ? text.replacingOccurrences(of: ".", with: ",") : text
+    }
+
+    /// Unit symbol in the interface language: "m/s²" → "м/с²" in Russian. Symbols without a
+    /// Russian form (°, °C, %) are returned unchanged.
+    static func unit(_ symbol: String, _ language: AppLanguage) -> String {
+        guard language == .ru else { return symbol }
+        return russianUnitSymbols[symbol] ?? symbol
+    }
+
+    /// Value with its unit: "5,00 кг" / "5.00 kg". A non-breaking space keeps the number and unit
+    /// on one line; degrees and percent attach to the number ("60°").
+    static func measurement(_ value: Double, fractionDigits: Int, unit symbol: String, _ language: AppLanguage) -> String {
+        let number = number(value, fractionDigits: fractionDigits, language)
+        if symbol.isEmpty { return number }
+        if symbol == "°" || symbol == "%" { return number + symbol }
+        return number + "\u{00A0}" + unit(symbol, language)
     }
 }

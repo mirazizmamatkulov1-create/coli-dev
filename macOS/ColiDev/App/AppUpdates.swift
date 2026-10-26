@@ -253,6 +253,7 @@ struct UpdatesSettingsSection: View {
     @ViewBuilder
     private func releaseRow(_ release: GitHubRelease) -> some View {
         let isExpanded = expandedReleaseIDs.contains(release.id)
+        let knownIssue = KnownReleaseIssue.issue(forTag: release.tagName)
         VStack(alignment: .leading, spacing: 6) {
             Button { toggleRelease(release.id) } label: {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -265,7 +266,11 @@ struct UpdatesSettingsSection: View {
                             Text(release.name.flatMap { $0.isEmpty ? nil : $0 } ?? release.tagName)
                                 .font(.body.weight(.semibold))
                             Spacer()
-                            if release.prerelease {
+                            if let knownIssue {
+                                Label(L10n.text(knownIssue.badgeKey, language), systemImage: "exclamationmark.triangle.fill")
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(.orange)
+                            } else if release.prerelease {
                                 Text(betaLabel).font(.caption2).foregroundStyle(.secondary)
                             }
                         }
@@ -292,7 +297,13 @@ struct UpdatesSettingsSection: View {
                             .textSelection(.enabled)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    if let asset = release.currentArchitectureAsset {
+                    if let knownIssue, !knownIssue.allowsDownload {
+                        Label(L10n.text(knownIssue.messageKey, language), systemImage: "exclamationmark.triangle.fill")
+                            .font(.callout)
+                            .foregroundStyle(.orange)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("settings.updates.issue.\(release.tagName)")
+                    } else if let asset = release.currentArchitectureAsset {
                         Link(destination: asset.browserDownloadURL) {
                             Label(downloadTitle, systemImage: "arrow.down.circle")
                         }

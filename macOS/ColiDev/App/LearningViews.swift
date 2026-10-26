@@ -605,6 +605,9 @@ struct CurriculumModuleView: View {
     @State private var learnerConfirmed = false
     @State private var reflection = ""
     @State private var hasConfirmedWatching = false
+    // A learner who already saved an answer after the video sees it as soon as the lesson opens.
+    // A new learner still watches first and answers the check before the question appears.
+    @State private var showsSavedVideoReflection = false
     @State private var recallQuality = 4
     @State private var checkAttempt: CurriculumCheckAttempt?
     @State private var selectedErrorCategory = ""
@@ -652,7 +655,8 @@ struct CurriculumModuleView: View {
                 tint: subject.tint,
                 language: store.language,
                 reflection: $reflection,
-                hasConfirmedWatching: $hasConfirmedWatching
+                // A saved answer means the video was already watched, so the "I finished watching" button is not needed.
+                hasConfirmedWatching: showsSavedVideoReflection ? .constant(true) : $hasConfirmedWatching
             )
         }
     }
@@ -660,8 +664,7 @@ struct CurriculumModuleView: View {
     @ViewBuilder
     private var postVideoReflectionContent: some View {
         if let activity = document?.videoActivity,
-           hasConfirmedWatching,
-           checkAttempt?.hasAnswered == true {
+           showsSavedVideoReflection || (hasConfirmedWatching && checkAttempt?.hasAnswered == true) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(L10n.text("lesson.video.afterLabel", store.language))
                     .font(.caption.weight(.semibold))
@@ -1023,6 +1026,7 @@ struct CurriculumModuleView: View {
         .onChange(of: store.studyProgress[lessonID]?.reflection) { savedReflection in
             guard store.studyReflectionDrafts[lessonID] == nil else { return }
             reflection = savedReflection ?? ""
+            revealSavedVideoReflectionIfNeeded()
         }
         .onChange(of: reflection) { value in
             store.saveReflectionDraft(value, lessonID: lessonID)
@@ -1072,6 +1076,15 @@ struct CurriculumModuleView: View {
         }
         learnerConfirmed = isComplete
         reflection = store.studyReflectionDrafts[lessonID] ?? store.studyProgress[lessonID]?.reflection ?? ""
+        showsSavedVideoReflection = false
+        revealSavedVideoReflectionIfNeeded()
+    }
+
+    // Only a non-empty saved answer counts; clearing the text later keeps the field open while editing.
+    private func revealSavedVideoReflectionIfNeeded() {
+        guard document?.videoActivity != nil,
+              !reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        showsSavedVideoReflection = true
     }
 
     private func copyNotebookLessonSource() {
@@ -2483,12 +2496,12 @@ private struct GeometryMeasureLab: View {
             .frame(height: 220)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(L10n.text("lab.geometryDiagram", store.language)))
-            .accessibilityValue(Text("\(L10n.text(shape == .rectangle ? "lab.geometryRectangle" : "lab.geometryTriangle", store.language)); b = \(base, specifier: "%.1f") m; h = \(height, specifier: "%.1f") m"))
+            .accessibilityValue(Text(verbatim: "\(L10n.text(shape == .rectangle ? "lab.geometryRectangle" : "lab.geometryTriangle", store.language)); b = \(L10n.measurement(base, fractionDigits: 1, unit: "m", store.language)); h = \(L10n.measurement(height, fractionDigits: 1, unit: "m", store.language))"))
 
             HStack {
-                Text("b = \(base, specifier: "%.1f") m")
+                Text(verbatim: "b = " + L10n.measurement(base, fractionDigits: 1, unit: "m", store.language))
                 Spacer()
-                Text("h = \(height, specifier: "%.1f") m")
+                Text(verbatim: "h = " + L10n.measurement(height, fractionDigits: 1, unit: "m", store.language))
             }
             .font(.callout.monospacedDigit())
 
@@ -2528,13 +2541,13 @@ private struct GeometryMeasureLab: View {
             HStack {
                 Text(L10n.text(key, store.language))
                 Spacer()
-                Text("\(value.wrappedValue, specifier: "%.1f") m")
+                Text(verbatim: L10n.measurement(value.wrappedValue, fractionDigits: 1, unit: "m", store.language))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
             Slider(value: value, in: 1...10, step: 0.5)
                 .accessibilityLabel(Text(L10n.text(key, store.language)))
-                .accessibilityValue(Text("\(value.wrappedValue, specifier: "%.1f") m"))
+                .accessibilityValue(Text(verbatim: L10n.measurement(value.wrappedValue, fractionDigits: 1, unit: "m", store.language)))
         }
     }
 
@@ -2543,7 +2556,7 @@ private struct GeometryMeasureLab: View {
             Text(L10n.text(key, store.language))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text("\(isApproximate ? "≈ " : "")\(value, specifier: "%.2f") \(unit)")
+            Text(verbatim: (isApproximate ? "≈ " : "") + L10n.measurement(value, fractionDigits: 2, unit: unit, store.language))
                 .font(.title3.monospacedDigit())
         }
         .accessibilityElement(children: .combine)
@@ -2561,16 +2574,15 @@ private struct PercentRepresentationLab: View {
     }
 
     private var formattedDecimal: String {
-        let locale = Locale(identifier: store.language == .ru ? "ru_RU" : "en_US")
-        return String(format: "%.2f", locale: locale, representation.decimal)
+        L10n.number(representation.decimal, fractionDigits: 2, store.language)
     }
 
     private var formattedKilometres: String {
-        String(format: "%.1f", locale: Locale(identifier: store.language == .ru ? "ru_RU" : "en_US"), kilometres)
+        L10n.number(kilometres, fractionDigits: 1, store.language)
     }
 
     private var formattedMetres: String {
-        String(format: "%.0f", locale: Locale(identifier: store.language == .ru ? "ru_RU" : "en_US"), KilometreConversion(kilometres: kilometres).metres)
+        L10n.number(KilometreConversion(kilometres: kilometres).metres, fractionDigits: 0, store.language)
     }
 
     var body: some View {
@@ -2595,10 +2607,12 @@ private struct PercentRepresentationLab: View {
             .frame(maxWidth: .infinity, minHeight: 54)
             .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(L10n.text("lab.percent.representations", store.language)
-                .replacingOccurrences(of: "%1", with: "\(representation.percent)%")
-                .replacingOccurrences(of: "%2", with: representation.fractionDescription)
-                .replacingOccurrences(of: "%3", with: formattedDecimal))
+            .accessibilityLabel(String(
+                format: L10n.text("lab.percent.representations", store.language),
+                "\(representation.percent)%",
+                representation.fractionDescription,
+                formattedDecimal
+            ))
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
@@ -2904,26 +2918,26 @@ private struct RationalExpressionLab: View {
                 HStack {
                     Text("−5")
                     Spacer()
-                    Text(String(format: L10n.text("lab.rationalSelectedInput", store.language), input))
+                    Text(String(format: L10n.text("lab.rationalSelectedInput", store.language), L10n.number(input, fractionDigits: 2, store.language)))
                         .font(.caption.monospacedDigit().weight(.semibold))
                     Spacer()
                     Text("5")
                 }
                 Slider(value: $input, in: -5...5, step: 0.25)
                     .accessibilityLabel(L10n.text("lab.rationalInput", store.language))
-                    .accessibilityValue(String(format: "%.2f", input))
+                    .accessibilityValue(L10n.number(input, fractionDigits: 2, store.language))
             }
 
             HStack(alignment: .top, spacing: 12) {
                 valueCard(
                     title: L10n.text("lab.rationalOriginal", store.language),
-                    value: originalValue.map { String(format: "%.2f", $0) }
+                    value: originalValue.map { L10n.number($0, fractionDigits: 2, store.language) }
                         ?? L10n.text("lab.rationalUndefined", store.language),
                     emphasized: originalValue == nil
                 )
                 valueCard(
                     title: L10n.text("lab.rationalReduced", store.language),
-                    value: String(format: "%.2f", simplifiedValue),
+                    value: L10n.number(simplifiedValue, fractionDigits: 2, store.language),
                     emphasized: false
                 )
             }
@@ -3035,7 +3049,7 @@ private struct DerivativeRateLab: View {
                 HStack {
                     Text(L10n.text("lab.derivativePoint", store.language))
                     Spacer()
-                    Text(String(format: "x = %.1f", point)).monospacedDigit()
+                    Text(verbatim: "x = " + L10n.number(point, fractionDigits: 1, store.language)).monospacedDigit()
                 }
                 Slider(value: $point, in: -2.0...2.0, step: 0.1)
                     .accessibilityLabel(Text(L10n.text("lab.derivativePoint", store.language)))
@@ -3043,7 +3057,7 @@ private struct DerivativeRateLab: View {
                 HStack {
                     Text(L10n.text("lab.derivativeStep", store.language))
                     Spacer()
-                    Text(String(format: "h = %.1f", step)).monospacedDigit()
+                    Text(verbatim: "h = " + L10n.number(step, fractionDigits: 1, store.language)).monospacedDigit()
                 }
                 Slider(value: $step, in: 0.05...1.0, step: 0.05)
                     .accessibilityLabel(Text(L10n.text("lab.derivativeStep", store.language)))
@@ -3061,8 +3075,8 @@ private struct DerivativeRateLab: View {
             .labelStyle(.titleAndIcon)
 
             VStack(alignment: .leading, spacing: 5) {
-                Text(String(format: L10n.text("lab.derivativeSecantValue", store.language), secantSlope))
-                Text(String(format: L10n.text("lab.derivativeTangentValue", store.language), tangentSlope))
+                Text(String(format: L10n.text("lab.derivativeSecantValue", store.language), L10n.number(secantSlope, fractionDigits: 2, store.language)))
+                Text(String(format: L10n.text("lab.derivativeTangentValue", store.language), L10n.number(tangentSlope, fractionDigits: 2, store.language)))
                     .fontWeight(.semibold)
             }
             .font(.callout.monospacedDigit())
@@ -3166,7 +3180,7 @@ private struct ConstrainedOptimizationLab: View {
                 HStack {
                     Text(L10n.text("lab.optimization.angle", store.language))
                     Spacer()
-                    Text(String(format: "%.0f°", angleRadians * 180 / Double.pi))
+                    Text(verbatim: L10n.measurement(angleRadians * 180 / Double.pi, fractionDigits: 0, unit: "°", store.language))
                         .monospacedDigit()
                 }
                 Slider(
@@ -3189,14 +3203,18 @@ private struct ConstrainedOptimizationLab: View {
             .labelStyle(.titleAndIcon)
 
             VStack(alignment: .leading, spacing: 5) {
-                Text(String(format: L10n.text("lab.optimization.point", store.language), point.x, point.y))
-                Text(String(format: L10n.text("lab.optimization.objective", store.language), point.objective))
-                Text(String(format: L10n.text("lab.optimization.derivative", store.language), point.tangentDerivative))
+                Text(String(
+                    format: L10n.text("lab.optimization.point", store.language),
+                    L10n.number(point.x, fractionDigits: 3, store.language),
+                    L10n.number(point.y, fractionDigits: 3, store.language)
+                ))
+                Text(String(format: L10n.text("lab.optimization.objective", store.language), L10n.number(point.objective, fractionDigits: 3, store.language)))
+                Text(String(format: L10n.text("lab.optimization.derivative", store.language), L10n.number(point.tangentDerivative, fractionDigits: 3, store.language)))
                 Text(L10n.text(statusKey, store.language))
                     .fontWeight(.semibold)
                     .foregroundStyle(point.isStationary ? Color.green : Color.secondary)
                 if let multiplier = point.lagrangeMultiplier {
-                    Text(String(format: L10n.text("lab.optimization.multiplier", store.language), multiplier))
+                    Text(String(format: L10n.text("lab.optimization.multiplier", store.language), L10n.number(multiplier, fractionDigits: 3, store.language)))
                 }
             }
             .font(.callout.monospacedDigit())
@@ -4964,7 +4982,7 @@ private struct SlopeLab: View {
                 Label("y = ax", systemImage: "function")
                     .font(.system(.headline, design: .monospaced))
                 Spacer()
-                Text("a = \(slope, specifier: "%.1f")")
+                Text(verbatim: "a = " + L10n.number(slope, fractionDigits: 1, store.language))
                     .font(.subheadline.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
@@ -5064,7 +5082,7 @@ private struct ForceLab: View {
             if lessonID != nil {
                 predictionView
             }
-            Force3DVisualization(force: force, mass: mass, displacement: motion.displacement)
+            Force3DVisualization(force: force, mass: mass, displacement: motion.displacement, language: store.language)
                 .frame(height: 240)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .accessibilityLabel(Text(L10n.text("lab.force3DHint", store.language)))
@@ -5076,8 +5094,8 @@ private struct ForceLab: View {
             Text(L10n.text("lab.forceAssumptions", store.language))
                 .font(.callout)
                 .foregroundStyle(.secondary)
-            valueSlider(title: L10n.text("lab.force", store.language), value: $force, range: -30...30, suffix: " N")
-            valueSlider(title: L10n.text("lab.mass", store.language), value: $mass, range: 1...10, suffix: " kg")
+            valueSlider(title: L10n.text("lab.force", store.language), value: $force, range: -30...30, unit: "N")
+            valueSlider(title: L10n.text("lab.mass", store.language), value: $mass, range: 1...10, unit: "kg")
             HStack {
                 Button {
                     if isRunning { pause() } else { start() }
@@ -5094,7 +5112,7 @@ private struct ForceLab: View {
             }
             ProgressView(value: elapsed, total: ForceMotion.duration)
                 .accessibilityLabel(Text(L10n.text("lab.motionTime", store.language)))
-                .accessibilityValue(Text("\(elapsed, specifier: "%.1f") / 2 s"))
+                .accessibilityValue(Text(verbatim: L10n.number(elapsed, fractionDigits: 1, store.language) + " / " + L10n.measurement(ForceMotion.duration, fractionDigits: 0, unit: "s", store.language)))
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 145), alignment: .leading)], alignment: .leading, spacing: 12) {
                 reading("lab.motionTime", value: elapsed, unit: "s")
                 reading("lab.acceleration", value: motion.acceleration, unit: "m/s²")
@@ -5193,7 +5211,7 @@ private struct ForceLab: View {
     private func reading(_ key: String, value: Double, unit: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(L10n.text(key, store.language)).font(.caption).foregroundStyle(.secondary)
-            Text("\(value, specifier: "%.2f") \(unit)").monospacedDigit()
+            Text(verbatim: L10n.measurement(value, fractionDigits: 2, unit: unit, store.language)).monospacedDigit()
         }
         .accessibilityElement(children: .combine)
     }
@@ -5224,12 +5242,12 @@ private struct ForceLab: View {
         elapsed = 0
     }
 
-    private func valueSlider(title: String, value: Binding<Double>, range: ClosedRange<Double>, suffix: String) -> some View {
+    private func valueSlider(title: String, value: Binding<Double>, range: ClosedRange<Double>, unit: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(title)
                 Spacer()
-                Text("\(value.wrappedValue, specifier: "%.0f")\(suffix)")
+                Text(verbatim: L10n.measurement(value.wrappedValue, fractionDigits: 0, unit: unit, store.language))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
@@ -5281,14 +5299,13 @@ private struct LengthMeasurementLab: View {
             .frame(height: 54)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(L10n.text("lab.measurementBand", store.language)))
-            .accessibilityValue(Text(String(format: "%.1f–%.1f cm",
-                                                measurement.lowerCentimetres,
-                                                measurement.upperCentimetres)))
+            .accessibilityValue(Text(verbatim: L10n.number(measurement.lowerCentimetres, fractionDigits: 1, store.language)
+                + "–" + L10n.measurement(measurement.upperCentimetres, fractionDigits: 1, unit: "cm", store.language)))
 
             HStack {
-                Text("0 cm")
+                Text(verbatim: L10n.measurement(0, fractionDigits: 0, unit: "cm", store.language))
                 Spacer()
-                Text("32 cm")
+                Text(verbatim: L10n.measurement(scaleCentimetres, fractionDigits: 0, unit: "cm", store.language))
             }
             .font(.caption.monospacedDigit())
             .foregroundStyle(.secondary)
@@ -5297,22 +5314,23 @@ private struct LengthMeasurementLab: View {
                 Text(L10n.text("lab.measurementLength", store.language))
                 Slider(value: $length, in: 3...30, step: 0.1)
                     .accessibilityLabel(Text(L10n.text("lab.measurementLength", store.language)))
-                    .accessibilityValue(Text(String(format: "%.1f cm", length)))
+                    .accessibilityValue(Text(verbatim: L10n.measurement(length, fractionDigits: 1, unit: "cm", store.language)))
             }
             VStack(alignment: .leading, spacing: 4) {
                 Text(L10n.text("lab.measurementUncertainty", store.language))
                 Slider(value: $uncertainty, in: 0.1...2, step: 0.1)
                     .accessibilityLabel(Text(L10n.text("lab.measurementUncertainty", store.language)))
-                    .accessibilityValue(Text(String(format: "%.1f cm", uncertainty)))
+                    .accessibilityValue(Text(verbatim: L10n.measurement(uncertainty, fractionDigits: 1, unit: "cm", store.language)))
             }
 
-            Text(String(format: "%.1f ± %.1f cm = %.3f ± %.3f m",
-                        length, uncertainty, measurement.metres, measurement.uncertaintyMetres))
+            Text(verbatim: L10n.number(length, fractionDigits: 1, store.language)
+                + " ± " + L10n.measurement(uncertainty, fractionDigits: 1, unit: "cm", store.language)
+                + " = " + L10n.number(measurement.metres, fractionDigits: 3, store.language)
+                + " ± " + L10n.measurement(measurement.uncertaintyMetres, fractionDigits: 3, unit: "m", store.language))
                 .font(.headline.monospacedDigit())
                 .textSelection(.enabled)
-            Text(String(format: "%@: %.1f%%",
-                        L10n.text("lab.measurementRelative", store.language),
-                        measurement.relativeUncertaintyPercent))
+            Text(verbatim: L10n.text("lab.measurementRelative", store.language) + ": "
+                + L10n.measurement(measurement.relativeUncertaintyPercent, fractionDigits: 1, unit: "%", store.language))
                 .font(.callout.monospacedDigit())
             Text(L10n.text("lab.measurementLimits", store.language))
                 .font(.caption)
@@ -5378,8 +5396,8 @@ private struct FrictionLab: View {
             .accessibilityElement(children: .contain)
 
             HStack(spacing: 14) {
-                Label("F = \(appliedForce, specifier: "%.1f") N", systemImage: "arrow.right")
-                Label("f = \(motion.frictionForce, specifier: "%.1f") N", systemImage: "arrow.left")
+                Label("F = " + L10n.measurement(appliedForce, fractionDigits: 1, unit: "N", store.language), systemImage: "arrow.right")
+                Label("f = " + L10n.measurement(motion.frictionForce, fractionDigits: 1, unit: "N", store.language), systemImage: "arrow.left")
             }
             .font(.callout.monospacedDigit())
             .accessibilityElement(children: .combine)
@@ -5388,15 +5406,16 @@ private struct FrictionLab: View {
                 .font(.headline)
                 .foregroundStyle(motion.isSliding ? Color.orange : Color.primary)
                 .accessibilityIdentifier("lesson.friction.motion-state")
-            Text("\(L10n.text("lab.frictionThreshold", store.language)): \(motion.maximumStaticFriction, specifier: "%.2f") N")
+            Text(verbatim: L10n.text("lab.frictionThreshold", store.language) + ": "
+                + L10n.measurement(motion.maximumStaticFriction, fractionDigits: 2, unit: "N", store.language))
                 .font(.callout.monospacedDigit())
                 .accessibilityIdentifier("lesson.friction.threshold")
 
-            slider("lab.mass", value: $mass, range: 1...10, step: 0.5, unit: " kg", identifier: "mass")
-            slider("lab.frictionPush", value: $appliedForce, range: 0...60, step: 1, unit: " N", identifier: "push")
+            slider("lab.mass", value: $mass, range: 1...10, step: 0.5, unit: "kg", identifier: "mass")
+            slider("lab.frictionPush", value: $appliedForce, range: 0...60, step: 1, unit: "N", identifier: "push")
             slider("lab.frictionStaticCoefficient", value: $staticCoefficient, range: 0.1...0.8, step: 0.05, unit: "", identifier: "static-coefficient")
             slider("lab.frictionKineticCoefficient", value: $kineticCoefficient, range: 0.05...staticCoefficient, step: 0.05, unit: "", identifier: "kinetic-coefficient")
-            slider("lab.frictionTime", value: $time, range: 0...FrictionMotion.duration, step: 0.1, unit: " s", identifier: "time")
+            slider("lab.frictionTime", value: $time, range: 0...FrictionMotion.duration, step: 0.1, unit: "s", identifier: "time")
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), alignment: .leading)], alignment: .leading, spacing: 12) {
                 reading("lab.frictionNormal", value: motion.normalForce, unit: "N", identifier: "normal")
@@ -5512,13 +5531,13 @@ private struct FrictionLab: View {
             HStack {
                 Text(L10n.text(titleKey, store.language))
                 Spacer(minLength: 8)
-                Text("\(value.wrappedValue, specifier: "%.2f")\(unit)")
+                Text(verbatim: L10n.measurement(value.wrappedValue, fractionDigits: 2, unit: unit, store.language))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
             Slider(value: value, in: range, step: step)
                 .accessibilityLabel(Text(L10n.text(titleKey, store.language)))
-                .accessibilityValue(Text("\(value.wrappedValue, specifier: "%.2f")\(unit)"))
+                .accessibilityValue(Text(verbatim: L10n.measurement(value.wrappedValue, fractionDigits: 2, unit: unit, store.language)))
                 .accessibilityIdentifier("lesson.friction.slider.\(identifier)")
         }
     }
@@ -5528,7 +5547,7 @@ private struct FrictionLab: View {
             Text(L10n.text(key, store.language))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text("\(value, specifier: "%.2f") \(unit)")
+            Text(verbatim: L10n.measurement(value, fractionDigits: 2, unit: unit, store.language))
                 .monospacedDigit()
         }
         .accessibilityElement(children: .combine)
@@ -5629,8 +5648,8 @@ private struct ProjectileMotionLab: View {
             }
             .font(.caption)
 
-            projectileSlider(title: L10n.text("lab.projectile.speed", store.language), value: $launchSpeed, range: 5...30, suffix: " m/s")
-            projectileSlider(title: L10n.text("lab.projectile.angle", store.language), value: $angleDegrees, range: 15...75, suffix: "°")
+            projectileSlider(title: L10n.text("lab.projectile.speed", store.language), value: $launchSpeed, range: 5...30, unit: "m/s")
+            projectileSlider(title: L10n.text("lab.projectile.angle", store.language), value: $angleDegrees, range: 15...75, unit: "°")
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.text("lab.projectile.time", store.language))
@@ -5638,7 +5657,7 @@ private struct ProjectileMotionLab: View {
                     .foregroundStyle(.secondary)
                 Slider(value: $elapsed, in: 0...max(motion.flightTime, 0.05), step: 0.05)
                     .accessibilityLabel(Text(L10n.text("lab.projectile.time", store.language)))
-                Text("t = \(elapsed, specifier: "%.2f") s")
+                Text(verbatim: "t = " + L10n.measurement(elapsed, fractionDigits: 2, unit: "s", store.language))
                     .monospacedDigit()
                     .font(.caption)
             }
@@ -5661,12 +5680,12 @@ private struct ProjectileMotionLab: View {
         .onChange(of: launchSpeed) { _ in elapsed = min(elapsed, motion.flightTime) }
     }
 
-    private func projectileSlider(title: String, value: Binding<Double>, range: ClosedRange<Double>, suffix: String) -> some View {
+    private func projectileSlider(title: String, value: Binding<Double>, range: ClosedRange<Double>, unit: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(title)
                 Spacer()
-                Text("\(value.wrappedValue, specifier: "%.0f")\(suffix)")
+                Text(verbatim: L10n.measurement(value.wrappedValue, fractionDigits: 0, unit: unit, store.language))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
@@ -5678,7 +5697,7 @@ private struct ProjectileMotionLab: View {
     private func projectileReading(_ key: String, value: Double, unit: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(L10n.text(key, store.language)).font(.caption).foregroundStyle(.secondary)
-            Text("\(value, specifier: "%.2f") \(unit)").monospacedDigit()
+            Text(verbatim: L10n.measurement(value, fractionDigits: 2, unit: unit, store.language)).monospacedDigit()
         }
         .accessibilityElement(children: .combine)
     }
@@ -5688,10 +5707,18 @@ private struct Force3DVisualization: NSViewRepresentable {
     let force: Double
     let mass: Double
     let displacement: Double
+    let language: AppLanguage
+
+    final class Coordinator {
+        var sceneLanguage: AppLanguage?
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> SCNView {
         let view = SCNView()
-        view.scene = Self.makeScene()
+        view.scene = Self.makeScene(language: language)
+        context.coordinator.sceneLanguage = language
         view.allowsCameraControl = true
         view.autoenablesDefaultLighting = true
         view.backgroundColor = .windowBackgroundColor
@@ -5699,11 +5726,16 @@ private struct Force3DVisualization: NSViewRepresentable {
     }
 
     func updateNSView(_ view: SCNView, context: Context) {
+        // The distance labels are baked into the scene, so rebuild it when the interface language changes.
+        if context.coordinator.sceneLanguage != language {
+            view.scene = Self.makeScene(language: language)
+            context.coordinator.sceneLanguage = language
+        }
         guard let scene = view.scene else { return }
         Self.update(scene: scene, force: force, mass: mass, displacement: displacement)
     }
 
-    private static func makeScene() -> SCNScene {
+    private static func makeScene(language: AppLanguage) -> SCNScene {
         let scene = SCNScene()
         scene.background.contents = NSColor.windowBackgroundColor
 
@@ -5729,7 +5761,7 @@ private struct Force3DVisualization: NSViewRepresentable {
             marker.geometry?.firstMaterial?.diffuse.contents = NSColor.secondaryLabelColor
             marker.position = SCNVector3(Float(metres) / 10, 0.005, 0)
             scene.rootNode.addChildNode(marker)
-            let label = SCNText(string: "\(metres) m", extrusionDepth: 0)
+            let label = SCNText(string: L10n.measurement(Double(metres), fractionDigits: 0, unit: "m", language), extrusionDepth: 0)
             label.font = .monospacedSystemFont(ofSize: 1, weight: .regular)
             label.firstMaterial?.diffuse.contents = NSColor.labelColor
             let labelNode = SCNNode(geometry: label)
@@ -5842,9 +5874,9 @@ private struct KineticEnergyLab: View {
                 energyReadout(title: L10n.text("lab.energyFinalSpeed", store.language), value: finalSpeed, unit: "m/s")
             }
 
-            valueSlider(title: L10n.text("lab.mass", store.language), value: $mass, range: 1...8, suffix: " kg")
-            valueSlider(title: L10n.text("lab.energyInitialSpeed", store.language), value: $initialSpeed, range: 0...12, suffix: " m/s")
-            valueSlider(title: L10n.text("lab.energyNetWork", store.language), value: $netWork, range: -80...120, suffix: " J")
+            valueSlider(title: L10n.text("lab.mass", store.language), value: $mass, range: 1...8, unit: "kg")
+            valueSlider(title: L10n.text("lab.energyInitialSpeed", store.language), value: $initialSpeed, range: 0...12, unit: "m/s")
+            valueSlider(title: L10n.text("lab.energyNetWork", store.language), value: $netWork, range: -80...120, unit: "J")
 
             if stopsBeforeWorkCompletes {
                 Label(L10n.text("lab.energyStops", store.language), systemImage: "exclamationmark.triangle.fill")
@@ -5860,18 +5892,18 @@ private struct KineticEnergyLab: View {
             Text(title)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text("\(value, specifier: "%.1f") \(unit)")
+            Text(verbatim: L10n.measurement(value, fractionDigits: 1, unit: unit, store.language))
                 .font(.callout.monospacedDigit().weight(.semibold))
         }
         .accessibilityElement(children: .combine)
     }
 
-    private func valueSlider(title: String, value: Binding<Double>, range: ClosedRange<Double>, suffix: String) -> some View {
+    private func valueSlider(title: String, value: Binding<Double>, range: ClosedRange<Double>, unit: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(title)
                 Spacer()
-                Text("\(value.wrappedValue, specifier: "%.0f")\(suffix)")
+                Text(verbatim: L10n.measurement(value.wrappedValue, fractionDigits: 0, unit: unit, store.language))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
@@ -5999,7 +6031,10 @@ private struct MomentumCollisionLab: View {
                             centerX: size.width * 0.5,
                             baseline: baseline,
                             velocity: collision.finalVelocity,
-                            label: String(format: L10n.text("lab.momentumVelocity", store.language), collision.finalVelocity)
+                            label: String(
+                                format: L10n.text("lab.momentumVelocity", store.language),
+                                L10n.measurement(collision.finalVelocity, fractionDigits: 1, unit: "m/s", store.language)
+                            )
                         )
                     }
                 } else {
@@ -6052,10 +6087,10 @@ private struct MomentumCollisionLab: View {
 
             Text("p = mv   ·   J = Δp = Fₙₑₜ Δt")
                 .font(.system(.headline, design: .monospaced))
-            valueSlider(title: L10n.text("lab.momentumMassOne", store.language), value: $firstMass, range: 1...8, step: 1, suffix: " kg")
-            valueSlider(title: L10n.text("lab.momentumVelocityOne", store.language), value: $firstVelocity, range: -8...8, step: 1, suffix: " m/s")
-            valueSlider(title: L10n.text("lab.momentumMassTwo", store.language), value: $secondMass, range: 1...8, step: 1, suffix: " kg")
-            valueSlider(title: L10n.text("lab.momentumVelocityTwo", store.language), value: $secondVelocity, range: -8...8, step: 1, suffix: " m/s")
+            valueSlider(title: L10n.text("lab.momentumMassOne", store.language), value: $firstMass, range: 1...8, step: 1, unit: "kg")
+            valueSlider(title: L10n.text("lab.momentumVelocityOne", store.language), value: $firstVelocity, range: -8...8, step: 1, unit: "m/s")
+            valueSlider(title: L10n.text("lab.momentumMassTwo", store.language), value: $secondMass, range: 1...8, step: 1, unit: "kg")
+            valueSlider(title: L10n.text("lab.momentumVelocityTwo", store.language), value: $secondVelocity, range: -8...8, step: 1, unit: "m/s")
 
             HStack(alignment: .firstTextBaseline, spacing: 18) {
                 readout(title: L10n.text("lab.momentumBeforeValue", store.language), value: momentumBefore, unit: "kg·m/s")
@@ -6138,12 +6173,12 @@ private struct MomentumCollisionLab: View {
         }
     }
 
-    private func valueSlider(title: String, value: Binding<Double>, range: ClosedRange<Double>, step: Double, suffix: String) -> some View {
+    private func valueSlider(title: String, value: Binding<Double>, range: ClosedRange<Double>, step: Double, unit: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(title)
                 Spacer()
-                Text("\(value.wrappedValue, specifier: "%.0f")\(suffix)")
+                Text(verbatim: L10n.measurement(value.wrappedValue, fractionDigits: 0, unit: unit, store.language))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
@@ -6155,7 +6190,7 @@ private struct MomentumCollisionLab: View {
     private func readout(title: String, value: Double, unit: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title).font(.caption).foregroundStyle(.secondary)
-            Text("\(value, specifier: "%.1f") \(unit)")
+            Text(verbatim: L10n.measurement(value, fractionDigits: 1, unit: unit, store.language))
                 .font(.callout.monospacedDigit().weight(.semibold))
         }
         .accessibilityElement(children: .combine)
@@ -7584,7 +7619,7 @@ private struct NaturalSelectionLab: View {
         HStack {
             Text("\(L10n.text("lab.naturalSelection.generation", store.language)) \(population.generation)")
             Spacer()
-            Text("\(L10n.text("lab.naturalSelection.meanValue", store.language)) \(population.traitMean, specifier: "%.1f")")
+            Text(verbatim: L10n.text("lab.naturalSelection.meanValue", store.language) + " " + L10n.number(population.traitMean, fractionDigits: 1, store.language))
         }
         .font(.subheadline.monospacedDigit())
     }
@@ -7675,7 +7710,7 @@ private struct NaturalSelectionLab: View {
         if let previousMean {
             HStack(spacing: 6) {
                 Text(L10n.text("lab.naturalSelection.outcome", store.language))
-                Text("\(previousMean, specifier: "%.1f") → \(population.traitMean, specifier: "%.1f")")
+                Text(verbatim: L10n.number(previousMean, fractionDigits: 1, store.language) + " → " + L10n.number(population.traitMean, fractionDigits: 1, store.language))
                     .monospacedDigit()
             }
             .font(.caption.weight(.medium))
@@ -7764,7 +7799,7 @@ private struct NaturalSelectionLab: View {
             HStack {
                 Text(L10n.text(labelKey, store.language))
                 Spacer()
-                Text("\(value.wrappedValue, specifier: "%.2f")")
+                Text(verbatim: L10n.number(value.wrappedValue, fractionDigits: 2, store.language))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
@@ -7801,14 +7836,14 @@ private struct EcosystemEnergyLab: View {
                             HStack {
                                 Text(L10n.text("biology.energy.level.\(level)", store.language))
                                 Spacer()
-                                Text("\(energies[index], specifier: "%.1f") kJ")
+                                Text(verbatim: L10n.measurement(energies[index], fractionDigits: 1, unit: "kJ", store.language))
                                     .monospacedDigit()
                             }
                             .font(.caption.weight(.medium))
                             ProgressView(value: energies[index], total: producerEnergy)
                                 .tint(levelColor(index))
                                 .accessibilityLabel(Text(L10n.text("biology.energy.level.\(level)", store.language)))
-                                .accessibilityValue(Text("\(energies[index], specifier: "%.1f") kJ"))
+                                .accessibilityValue(Text(verbatim: L10n.measurement(energies[index], fractionDigits: 1, unit: "kJ", store.language)))
                         }
                     }
                 }
@@ -7819,13 +7854,13 @@ private struct EcosystemEnergyLab: View {
                     key: "biology.energyLab.producerEnergy",
                     value: $producerEnergy,
                     range: 1_000...20_000,
-                    format: "%.0f kJ"
+                    unit: "kJ"
                 )
                 energySlider(
                     key: "biology.energyLab.transfer",
                     value: $transferFraction,
                     range: 0.05...0.30,
-                    format: "%.0f%%",
+                    unit: "%",
                     scale: 100
                 )
 
@@ -7841,14 +7876,14 @@ private struct EcosystemEnergyLab: View {
         key: String,
         value: Binding<Double>,
         range: ClosedRange<Double>,
-        format: String,
+        unit: String,
         scale: Double = 1
     ) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack {
                 Text(L10n.text(key, store.language))
                 Spacer()
-                Text(String(format: format, value.wrappedValue * scale))
+                Text(verbatim: L10n.measurement(value.wrappedValue * scale, fractionDigits: 0, unit: unit, store.language))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
@@ -10182,11 +10217,16 @@ private struct AlgorithmComplexityLab: View {
 
 private struct HeldOutEvaluationLab: View {
     @EnvironmentObject private var store: LearningStore
-    @State private var neighbourIndex = 0.0
+    // The slider moves over the k values themselves, so VoiceOver reports "k = 13", not a slider position.
+    @State private var neighbourValue = Double(HeldOutEvaluationPractice.neighbourCounts[0])
+
+    private static let counts = HeldOutEvaluationPractice.neighbourCounts
+    private static let neighbourRange = Double(counts[0])...Double(counts[counts.count - 1])
+    private static let neighbourStep = Double(counts[1] - counts[0])
 
     private var neighbourCount: Int {
-        let counts = HeldOutEvaluationPractice.neighbourCounts
-        return counts[min(max(Int(neighbourIndex.rounded()), 0), counts.count - 1)]
+        let target = Int(neighbourValue.rounded())
+        return HeldOutEvaluationPractice.neighbourCounts.min { abs($0 - target) < abs($1 - target) } ?? target
     }
 
     private var verdictKey: String {
@@ -10211,9 +10251,9 @@ private struct HeldOutEvaluationLab: View {
             VStack(alignment: .leading, spacing: 7) {
                 Text(String(format: L10n.text("lab.holdout.neighbours", store.language), neighbourCount))
                     .font(.headline.monospacedDigit())
-                Slider(value: $neighbourIndex, in: 0...Double(HeldOutEvaluationPractice.neighbourCounts.count - 1), step: 1)
+                Slider(value: $neighbourValue, in: Self.neighbourRange, step: Self.neighbourStep)
                     .accessibilityLabel(L10n.text("lab.holdout.neighboursLabel", store.language))
-                    .accessibilityValue(String(neighbourCount))
+                    .accessibilityValue("k = \(neighbourCount)")
             }
 
             accuracyBar(
@@ -10287,11 +10327,18 @@ private struct NeuronSignalLab: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             VStack(alignment: .leading, spacing: 7) {
-                Text(String(format: L10n.text("lab.neuron.stimulus", store.language), Int(depolarization.rounded()), potential))
+                Text(String(
+                    format: L10n.text("lab.neuron.stimulus", store.language),
+                    Int(depolarization.rounded()),
+                    L10n.measurement(Double(potential), fractionDigits: 0, unit: "mV", store.language)
+                ))
                     .font(.headline.monospacedDigit())
                 Slider(value: $depolarization, in: NeuronSignalModel.stimulusRange, step: 1)
                     .accessibilityLabel(L10n.text("lab.neuron.stimulusLabel", store.language))
-                    .accessibilityValue(String(format: L10n.text("lab.neuron.potentialValue", store.language), potential))
+                    .accessibilityValue(String(
+                        format: L10n.text("lab.neuron.potentialValue", store.language),
+                        L10n.measurement(Double(potential), fractionDigits: 0, unit: "mV", store.language)
+                    ))
             }
 
             MembraneTraceView(
@@ -10385,9 +10432,12 @@ private struct VectorKinematicsLab: View {
     }
 
     private var vectorAccessibilityValue: String {
-        var value = "r \(Int(vector.magnitude)) m, θ \(Int(vector.angleDegrees))°"
+        let language = store.language
+        var value = "r " + L10n.measurement(vector.magnitude, fractionDigits: 0, unit: "m", language)
+            + ", θ " + L10n.measurement(vector.angleDegrees, fractionDigits: 0, unit: "°", language)
         if showsComponents {
-            value += String(format: ", Δx %.2f m, Δy %.2f m", vector.xComponent, vector.yComponent)
+            value += ", Δx " + L10n.measurement(vector.xComponent, fractionDigits: 2, unit: "m", language)
+                + ", Δy " + L10n.measurement(vector.yComponent, fractionDigits: 2, unit: "m", language)
         }
         return value
     }
@@ -10409,19 +10459,20 @@ private struct VectorKinematicsLab: View {
                         value: $magnitude,
                         range: 1...20,
                         step: 1,
-                        suffix: " m"
+                        unit: "m"
                     )
                     vectorSlider(
                         title: L10n.text("lab.vector.angle", store.language),
                         value: $angleDegrees,
                         range: 0...359,
                         step: 1,
-                        suffix: "°"
+                        unit: "°"
                     )
                     Toggle(isOn: $showsComponents) {
                         Text(L10n.text("lab.vector.showComponents", store.language))
                     }
                     .toggleStyle(.switch)
+                    .accessibilityLabel(Text(L10n.text("lab.vector.showComponents", store.language)))
                     .help(L10n.text("lab.vector.revealHelp", store.language))
 
                     VStack(alignment: .leading, spacing: 6) {
@@ -10505,13 +10556,13 @@ private struct VectorKinematicsLab: View {
         value: Binding<Double>,
         range: ClosedRange<Double>,
         step: Double,
-        suffix: String
+        unit: String
     ) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(title)
                 Spacer()
-                Text("\(value.wrappedValue, specifier: "%.0f")\(suffix)").monospacedDigit()
+                Text(verbatim: L10n.measurement(value.wrappedValue, fractionDigits: 0, unit: unit, store.language)).monospacedDigit()
             }
             Slider(value: value, in: range, step: step)
                 .accessibilityLabel(Text(title))
@@ -10522,7 +10573,7 @@ private struct VectorKinematicsLab: View {
         HStack {
             Text(L10n.text(key, store.language)).foregroundStyle(.secondary)
             Spacer()
-            Text("\(value, specifier: "%.2f") m").monospacedDigit()
+            Text(verbatim: L10n.measurement(value, fractionDigits: 2, unit: "m", store.language)).monospacedDigit()
         }
         .accessibilityElement(children: .combine)
     }
@@ -10753,7 +10804,7 @@ private struct GradientDescentLab: View {
 
             Picker(L10n.text("lab.gd.rate", store.language), selection: $learningRateIndex) {
                 ForEach(Array(GradientDescentPractice.learningRates.enumerated()), id: \.offset) { index, rate in
-                    Text(String(format: "η = %.2f", rate)).tag(index)
+                    Text(verbatim: "η = " + L10n.number(rate, fractionDigits: 2, store.language)).tag(index)
                 }
             }
             .pickerStyle(.segmented)
@@ -10768,7 +10819,11 @@ private struct GradientDescentLab: View {
             }
 
             if let last = trajectory.last {
-                Text(String(format: L10n.text("lab.gd.state", store.language), last.weight, last.loss))
+                Text(String(
+                    format: L10n.text("lab.gd.state", store.language),
+                    L10n.number(last.weight, fractionDigits: 3, store.language),
+                    L10n.number(last.loss, fractionDigits: 3, store.language)
+                ))
                     .font(.callout.monospacedDigit())
                     .accessibilityIdentifier("lab.gd.state")
             }
@@ -10822,6 +10877,10 @@ private struct SynapticSummationLab: View {
         SynapticSummationModel.reachesThreshold(excitatory: excitatory, inhibitory: inhibitory)
     }
 
+    private var potentialDescription: String {
+        L10n.measurement(potential.rounded(), fractionDigits: 0, unit: "mV", store.language)
+    }
+
     var body: some View {
         LabCard {
             Text(L10n.text("lab.synapse.title", store.language))
@@ -10835,21 +10894,25 @@ private struct SynapticSummationLab: View {
                 Text(String(format: L10n.text("lab.synapse.excitatory", store.language), excitatory))
                     .monospacedDigit()
             }
+            .accessibilityLabel(Text(L10n.text("lab.synapse.excitatoryLabel", store.language)))
+            .accessibilityValue(Text(verbatim: String(excitatory)))
             .accessibilityIdentifier("lab.synapse.excitatory")
             Stepper(value: $inhibitory, in: SynapticSummationModel.inputRange) {
                 Text(String(format: L10n.text("lab.synapse.inhibitory", store.language), inhibitory))
                     .monospacedDigit()
             }
+            .accessibilityLabel(Text(L10n.text("lab.synapse.inhibitoryLabel", store.language)))
+            .accessibilityValue(Text(verbatim: String(inhibitory)))
             .accessibilityIdentifier("lab.synapse.inhibitory")
 
-            Text(String(format: L10n.text("lab.synapse.potential", store.language), Int(potential.rounded())))
+            Text(String(format: L10n.text("lab.synapse.potential", store.language), potentialDescription))
                 .font(.headline.monospacedDigit())
                 .accessibilityIdentifier("lab.synapse.potential")
             potentialScale
                 .frame(height: 26)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(L10n.text("lab.synapse.scale", store.language))
-                .accessibilityValue(String(format: L10n.text("lab.synapse.potential", store.language), Int(potential.rounded())))
+                .accessibilityValue(String(format: L10n.text("lab.synapse.potential", store.language), potentialDescription))
 
             Label(L10n.text(fires ? "lab.synapse.fires" : "lab.synapse.noFire", store.language), systemImage: fires ? "bolt.fill" : "minus.circle")
                 .font(.callout.weight(.medium))
@@ -10906,27 +10969,28 @@ private struct PendulumLab: View {
                     .accessibilityLabel(L10n.text("lab.pendulum.diagram", store.language))
                 VStack(alignment: .leading, spacing: 10) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(String(format: L10n.text("lab.pendulum.length", store.language), length))
+                        Text(String(format: L10n.text("lab.pendulum.length", store.language), L10n.measurement(length, fractionDigits: 2, unit: "m", store.language)))
                             .monospacedDigit()
                         Slider(value: $length, in: PendulumModel.lengthRange, step: 0.25)
                             .accessibilityLabel(L10n.text("lab.pendulum.lengthLabel", store.language))
                     }
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(String(format: L10n.text("lab.pendulum.mass", store.language), mass))
+                        Text(String(format: L10n.text("lab.pendulum.mass", store.language), L10n.measurement(mass, fractionDigits: 1, unit: "kg", store.language)))
                             .monospacedDigit()
                         Slider(value: $mass, in: PendulumModel.massRange, step: 0.1)
                             .accessibilityLabel(L10n.text("lab.pendulum.massLabel", store.language))
                     }
                     Text(String(
                         format: L10n.text("lab.pendulum.reading", store.language),
-                        PendulumModel.period(length: length, mass: mass),
-                        PendulumModel.frequency(length: length)
+                        L10n.measurement(PendulumModel.period(length: length, mass: mass), fractionDigits: 2, unit: "s", store.language),
+                        L10n.measurement(PendulumModel.frequency(length: length), fractionDigits: 2, unit: "Hz", store.language)
                     ))
                     .font(.headline.monospacedDigit())
                     .accessibilityIdentifier("lab.pendulum.reading")
                     if !reduceMotion {
                         Toggle(L10n.text("lab.pendulum.swing", store.language), isOn: $isSwinging)
                             .toggleStyle(.switch)
+                            .accessibilityLabel(Text(L10n.text("lab.pendulum.swing", store.language)))
                     }
                 }
             }
@@ -11022,17 +11086,17 @@ private struct HeatMixingLab: View {
             portionControls(titleKey: "lab.heat.first", mass: $coldMass, temperature: $coldTemperature)
             portionControls(titleKey: "lab.heat.second", mass: $hotMass, temperature: $hotTemperature)
 
-            Text(String(format: L10n.text("lab.heat.result", store.language), finalTemperature))
+            Text(String(format: L10n.text("lab.heat.result", store.language), L10n.measurement(finalTemperature, fractionDigits: 1, unit: "°C", store.language)))
                 .font(.headline.monospacedDigit())
                 .accessibilityIdentifier("lab.heat.result")
-            Text(String(format: L10n.text("lab.heat.transfer", store.language), transferredHeat / 1000))
+            Text(String(format: L10n.text("lab.heat.transfer", store.language), L10n.measurement(transferredHeat / 1000, fractionDigits: 1, unit: "kJ", store.language)))
                 .font(.callout.monospacedDigit())
                 .foregroundStyle(.secondary)
             temperatureScale
                 .frame(height: 28)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(L10n.text("lab.heat.scale", store.language))
-                .accessibilityValue(String(format: L10n.text("lab.heat.result", store.language), finalTemperature))
+                .accessibilityValue(String(format: L10n.text("lab.heat.result", store.language), L10n.measurement(finalTemperature, fractionDigits: 1, unit: "°C", store.language)))
 
             Text(L10n.text("lab.heat.challenge", store.language))
                 .font(.callout)
@@ -11052,7 +11116,7 @@ private struct HeatMixingLab: View {
                 .font(.callout.weight(.semibold))
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(String(format: L10n.text("lab.heat.mass", store.language), mass.wrappedValue))
+                    Text(String(format: L10n.text("lab.heat.mass", store.language), L10n.measurement(mass.wrappedValue, fractionDigits: 1, unit: "kg", store.language)))
                         .font(.caption.monospacedDigit())
                     Slider(value: mass, in: HeatMixingModel.massRange, step: 0.5)
                         .accessibilityLabel(L10n.text(titleKey, store.language) + ", " + L10n.text("lab.heat.massLabel", store.language))

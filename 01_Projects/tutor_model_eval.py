@@ -160,6 +160,8 @@ def run(
         if provider is not None and not index.warm_embeddings():
             raise RuntimeError(f"Could not embed the course with {embedding_model}")
         prompts = [build_prompts(question, index) for question in questions]
+        if provider is not None and index._embedding_retry_after > time.monotonic():
+            raise RuntimeError("Ollama embeddings failed, so retrieval fell back to keywords")
 
     results: dict[str, Any] = {"embedding_model": embedding_model, "variants": []}
     with httpx.Client(trust_env=False, timeout=httpx.Timeout(600, connect=5)) as client:

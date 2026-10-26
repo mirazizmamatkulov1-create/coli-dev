@@ -76,6 +76,15 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, float]:
     }
 
 
+def _require_embeddings(index: KnowledgeIndex) -> None:
+    """Stop instead of reporting keyword results as semantic ones."""
+    if index.embedding_provider is not None and index._embedding_retry_after > time.monotonic():
+        raise RuntimeError(
+            "Ollama embeddings failed during the run, so search fell back to keywords; "
+            "check that the embedding model is still installed"
+        )
+
+
 @contextmanager
 def _fusion(**overrides: Any) -> Iterator[None]:
     """Temporarily change knowledge_index fusion constants (e.g. _LEXICAL_WEIGHT)."""
@@ -135,6 +144,7 @@ def run(
                     started = time.perf_counter()
                     results = index.refresh_and_search(question["question"], limit=TOP_K)
                     latencies[name].append(time.perf_counter() - started)
+                _require_embeddings(index)
                 modes[name].append(score_question(question, _ranked_documents(results)))
 
     return {

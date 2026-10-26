@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import random
 import re
+import shutil
 import sqlite3
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -334,7 +336,7 @@ def test_priority_curriculum_roadmaps_are_retrievable(
     )
 
 
-@pytest.mark.parametrize(("query", "expected_path"), [
+_BILINGUAL_MODULE_QUERIES = [
     (
         "linear function model taxi starting charge slope kilometres fare traffic waiting",
         "Mathematics/lessons/functions_as_models.md",
@@ -399,7 +401,10 @@ def test_priority_curriculum_roadmaps_are_retrievable(
         "count_even number modulo two return count list empty list",
         "Programming/lessons/conditions_loops_functions.md",
     ),
-])
+]
+
+
+@pytest.mark.parametrize(("query", "expected_path"), _BILINGUAL_MODULE_QUERIES)
 def test_bilingual_lesson_modules_are_retrievable(
     tmp_path: Path, query: str, expected_path: str
 ) -> None:
@@ -414,6 +419,46 @@ def test_bilingual_lesson_modules_are_retrievable(
     expected_source_checked = _source_checked_date(lesson.read_text(encoding="utf-8"))
     assert results[0]["source_checked_at"] == expected_source_checked
     assert "source_checked" not in results[0]["excerpt"]
+
+
+def _grow_course_corpus(project: Path) -> None:
+    """Add long neutral lessons and lengthen every mathematics lesson."""
+    rnd = random.Random(2026)
+    vocabulary = [f"filler{i}" for i in range(300)] + [f"наполнитель{i}" for i in range(300)]
+
+    def paragraph() -> str:
+        return " ".join(rnd.choice(vocabulary) for _ in range(170))
+
+    synthetic = project / "02_Areas" / "Synthetic"
+    synthetic.mkdir()
+    for number in range(30):
+        sections = "\n\n".join(f"## Filler part {part}\n\n{paragraph()}" for part in range(10))
+        (synthetic / f"filler_{number:02d}.md").write_text(
+            f"# Filler {number}\n\n{sections}\n", encoding="utf-8"
+        )
+    for lesson in sorted((project / "02_Areas" / "Mathematics" / "lessons").glob("*.md")):
+        lesson.write_text(
+            lesson.read_text(encoding="utf-8") + f"\n\n## Filler appendix\n\n{paragraph()}\n",
+            encoding="utf-8",
+        )
+
+
+def test_lesson_ranking_is_stable_when_the_corpus_grows(tmp_path: Path) -> None:
+    """Longer lessons in one subject must not reorder another subject's results."""
+    project = tmp_path / "project"
+    shutil.copytree(Path(__file__).resolve().parent.parent / "02_Areas", project / "02_Areas")
+    _grow_course_corpus(project)
+    index = KnowledgeIndex(project, tmp_path / "knowledge.sqlite3")
+    assert index.refresh_sources()["document_count"] >= 110
+
+    misplaced = {
+        query: results[0]["path"] if results else None
+        for query, expected_path in _BILINGUAL_MODULE_QUERIES
+        if not (results := index.refresh_and_search(query, limit=4))
+        or results[0]["path"] != f"02_Areas/{expected_path}"
+    }
+
+    assert misplaced == {}
 
 
 def test_bundled_english_lesson_rag_returns_its_official_primary_source(tmp_path: Path) -> None:
@@ -919,6 +964,131 @@ def test_embeddings_fail_safely_to_lexical_search(tmp_path: Path) -> None:
     assert index.refresh_and_search("membranes molecules")[0]["path"] == "02_Areas/Biology/cells.md"
     assert index.refresh_and_search("membranes molecules")
     assert provider.call_count == 1  # Avoid a slow local timeout on every question.
+
+
+def _write_many_lessons(project: Path, count: int) -> None:
+    course = project / "02_Areas" / "Mathematics"
+    course.mkdir(parents=True)
+    (course / "calculus.md").write_text(
+        "# Differential calculus\n\nDerivatives measure local rates of change.\n",
+        encoding="utf-8",
+    )
+    for number in range(count - 1):
+        (course / f"note_{number:02d}.md").write_text(
+            f"# Arithmetic note {number}\n\nAdding whole numbers {number} and {number + 1}.\n",
+            encoding="utf-8",
+        )
+
+
+def test_large_embedding_gap_is_filled_in_background_while_keyword_search_answers(
+    tmp_path: Path,
+) -> None:
+    project = tmp_path / "project"
+    _write_many_lessons(project, 20)
+    provider = FakeEmbeddingProvider()
+    index = KnowledgeIndex(project, tmp_path / "state" / "knowledge.sqlite3", provider)
+
+    # 20 chunks exceed one inline batch: answer by keywords and start the pass.
+    # 20 фрагментов больше одного пакета: отвечаем по словам и запускаем проход.
+    first = index.refresh_and_search("derivatives rates", limit=1)
+    assert first[0]["path"] == "02_Areas/Mathematics/calculus.md"
+    assert index._warmup_thread is not None
+    index._warmup_thread.join(timeout=10)
+    assert index.embedding_status() == {
+        "chunk_count": 20, "embedded_chunk_count": 20, "semantic_ready": True,
+    }
+    assert [len(call) for call in provider.calls] == [16, 4]
+
+    # No shared keyword: only the vectors can find the calculus lesson now.
+    # Общих слов нет: урок по анализу теперь находят только векторы.
+    semantic = index.refresh_and_search("optimization methods", limit=1)
+    assert semantic[0]["path"] == "02_Areas/Mathematics/calculus.md"
+    assert provider.calls[-1] == ["optimization methods"]
+
+
+def test_background_pass_discards_vectors_for_lessons_edited_meanwhile(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    course = project / "02_Areas" / "Biology"
+    course.mkdir(parents=True)
+    lesson = course / "cells.md"
+    lesson.write_text("# Cells\n\nOld membrane notes.\n", encoding="utf-8")
+    index = KnowledgeIndex(project, tmp_path / "state" / "knowledge.sqlite3")
+    index.refresh_sources()
+
+    class EditingProvider:
+        model = "editing-model"
+
+        def __init__(self) -> None:
+            self.calls: list[list[str]] = []
+
+        def embed(self, texts: list[str]) -> list[list[float]]:
+            self.calls.append(texts)
+            if len(self.calls) == 1:
+                # The learner saves the lesson while Ollama is still working.
+                # Ученик сохраняет урок, пока Ollama ещё считает.
+                lesson.write_text("# Cells\n\nFresh membrane notes.\n", encoding="utf-8")
+                index.refresh_sources()
+            return [[1.0, 0.0] if "fresh" in text.casefold() else [0.0, 1.0] for text in texts]
+
+    provider = EditingProvider()
+    index.set_embedding_provider(provider)
+
+    assert index.warm_embeddings() is True
+    assert len(provider.calls) == 2
+    connection = sqlite3.connect(index.database_path)
+    try:
+        stored = connection.execute(
+            "SELECT vector_json FROM chunk_embeddings WHERE model = 'editing-model'"
+        ).fetchall()
+    finally:
+        connection.close()
+    assert stored == [("[1.0,0.0]",)]
+
+
+def test_cached_vectors_are_decoded_once_across_questions(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    _write_many_lessons(project, 3)
+    database = tmp_path / "state" / "knowledge.sqlite3"
+    KnowledgeIndex(project, database, FakeEmbeddingProvider()).refresh_and_search("calculus")
+
+    index = KnowledgeIndex(project, database, FakeEmbeddingProvider())
+    with patch.object(KnowledgeIndex, "_decode_vector", wraps=KnowledgeIndex._decode_vector) as decode:
+        index.refresh_and_search("optimization methods")
+        assert decode.call_count == 3
+        result = index.refresh_and_search("optimization methods", limit=1)
+        assert decode.call_count == 3
+    assert result[0]["path"] == "02_Areas/Mathematics/calculus.md"
+
+
+def test_embedding_status_without_a_model_reports_keyword_mode(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    _write_many_lessons(project, 2)
+    index = KnowledgeIndex(project, tmp_path / "state" / "knowledge.sqlite3")
+    assert index.embedding_status()["semantic_ready"] is False
+    index.refresh_sources()
+
+    assert index.embedding_status() == {
+        "chunk_count": 2, "embedded_chunk_count": 0, "semantic_ready": False,
+    }
+    assert index.start_embedding_warmup() is False
+
+
+@pytest.mark.parametrize(
+    ("model", "expected_input"),
+    [
+        ("bge-m3:latest", "Why do cells swell?"),
+        (
+            "qwen3-embedding:0.6b",
+            "Instruct: Given a student's study question, retrieve course passages that answer it\n"
+            "Query: Why do cells swell?",
+        ),
+    ],
+)
+def test_query_embedding_adds_only_the_model_family_instruction(model: str, expected_input: str) -> None:
+    provider = OllamaEmbeddingProvider("http://127.0.0.1:11434", model)
+    with patch.object(provider, "embed", return_value=[[1.0]]) as embed:
+        provider.embed_query("Why do cells swell?")
+    embed.assert_called_once_with([expected_input])
 
 
 def test_ollama_embedding_provider_rejects_remote_endpoints() -> None:

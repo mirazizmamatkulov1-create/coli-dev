@@ -246,6 +246,14 @@ OLLAMA_BASE = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
 OLLAMA_CHAT_URL = f"{OLLAMA_BASE}/api/chat"
 OLLAMA_MODEL_RESEARCHER = os.getenv("OLLAMA_RESEARCHER", "qwen2.5-coder:7b")
 OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "").strip()
+# Multilingual RU/EN embedding model used automatically once it is installed in
+# local Ollama, unless OLLAMA_EMBEDDING_MODEL or the Control Center says otherwise.
+# An empty value turns the automatic choice off. See
+# project-plan/research/rag-semantic-search-and-tutor-model-2026-10-26.md.
+# Многоязычная модель эмбеддингов RU/EN включается сама, когда установлена в
+# локальной Ollama, если OLLAMA_EMBEDDING_MODEL или Центр управления не задают
+# другое. Пустое значение выключает автоматический выбор.
+OLLAMA_EMBEDDING_AUTO_MODEL = os.getenv("OLLAMA_EMBEDDING_AUTO_MODEL", "bge-m3").strip()
 
 # Таймауты
 HTTP_TIMEOUT = float(os.getenv("HTTP_TIMEOUT", "90"))
@@ -675,6 +683,9 @@ class HealthResponse(BaseModel):
     knowledge_review_due_document_count: int = 0
     knowledge_review_scheduled_document_count: int = 0
     knowledge_review_schedule_missing_document_count: int = 0
+    knowledge_chunk_count: int = 0
+    knowledge_embedded_chunk_count: int = 0
+    knowledge_semantic_ready: bool = False
 
 
 class ErrorResponse(BaseModel):
@@ -2429,6 +2440,11 @@ class ConsiliumEngine:
                 {"role": "user", "content": message},
             ],
             "stream": False,
+            # Thinking models (such as qwen3.5) otherwise spend the whole output
+            # budget on hidden reasoning; models without thinking ignore this.
+            # Иначе «думающие» модели (например, qwen3.5) тратят весь лимит ответа на
+            # скрытые рассуждения; модели без этого режима флаг игнорируют.
+            "think": False,
             "options": {"num_predict": 1024},
         }
         try:
@@ -2477,6 +2493,11 @@ class ConsiliumEngine:
                 {"role": "user", "content": message},
             ],
             "stream": True,
+            # Without this, qwen3.5 returned an empty answer for 8 of 10 tutor
+            # questions: its hidden reasoning used all 1024 output tokens.
+            # Без этого qwen3.5 вернула пустой ответ на 8 из 10 вопросов тьютору:
+            # скрытые рассуждения съели все 1024 токена.
+            "think": False,
             "options": {"num_predict": 1024},
         }
         try:
@@ -2819,7 +2840,12 @@ provider_usage_store = ProviderUsageStore(app_data_dir() / "provider-usage.sqlit
 
 
 def _ollama_embedding_model_payload() -> dict[str, str | bool | None]:
-    return ollama_embedding_model_settings.get()
+    saved = ollama_embedding_model_settings.get()
+    if saved["source"] == "disabled" and _embedding_provider is not None:
+        # Nothing was chosen explicitly, so the active model is the automatic default.
+        # Явного выбора нет, значит активна модель, включённая автоматически.
+        return {"model": _embedding_provider.model_name, "source": "automatic", "configured": True}
+    return saved
 
 
 def _apply_ollama_embedding_model(model: str | None) -> None:
@@ -2831,6 +2857,52 @@ def _apply_ollama_embedding_model(model: str | None) -> None:
         provider = OllamaEmbeddingProvider(OLLAMA_BASE, model)
     _embedding_provider = provider
     knowledge_index.set_embedding_provider(provider)
+    if provider is not None:
+        # The first pass over the course takes minutes on an M1; keyword search
+        # answers questions until the background pass completes.
+        # Первый проход по курсу на M1 занимает минуты; до его конца отвечает
+        # поиск по словам.
+        knowledge_index.start_embedding_warmup()
+
+
+def _installed_ollama_model(name: str, installed: list[Any]) -> str | None:
+    """Match a model name such as 'bge-m3' to an installed Ollama tag."""
+    names = [item for item in installed if isinstance(item, str)]
+    if name in names:
+        return name
+    if ":" in name:
+        return None
+    if f"{name}:latest" in names:
+        return f"{name}:latest"
+    tagged = sorted(item for item in names if item.split(":", 1)[0] == name)
+    return tagged[0] if tagged else None
+
+
+def _sync_automatic_embedding_model(ollama_info: dict[str, Any]) -> None:
+    """Turn on the default local embedding model once Ollama reports it installed.
+
+    An explicit choice in OLLAMA_EMBEDDING_MODEL or the Control Center, including
+    switching embeddings off, always wins. Without the model, keyword search
+    keeps working exactly as before.
+    """
+    if ollama_embedding_model_settings.get()["source"] != "disabled":
+        return
+    installed = ollama_info.get("models")
+    if not isinstance(installed, list) or not _is_loopback_http_url(OLLAMA_BASE):
+        return
+    match = (
+        _installed_ollama_model(OLLAMA_EMBEDDING_AUTO_MODEL, installed)
+        if OLLAMA_EMBEDDING_AUTO_MODEL
+        else None
+    )
+    current = _embedding_provider.model_name if _embedding_provider is not None else None
+    if match == current:
+        return
+    _apply_ollama_embedding_model(match)
+    logger.info(
+        "Automatic local embedding model updated",
+        extra={"model": match or "keyword search only"},
+    )
 
 SUBJECT_MODEL_ROUTE_SUBJECTS = (
     "mathematics", "english", "physics", "biology", "zoology", "programming",
@@ -3881,6 +3953,8 @@ async def lifespan(app: FastAPI):
         trust_env=False,
     )
     state.online = await _check_network()
+    _sync_automatic_embedding_model(await _check_ollama())
+    knowledge_index.start_embedding_warmup()
 
     # Obsidian's local REST plugin must stay on this device; do not send its key to a remote host.
     state.obsidian = None
@@ -4861,6 +4935,8 @@ async def health(request: Request):
         asyncio.to_thread(knowledge_index.status),
     )
     state.online = net_ok
+    _sync_automatic_embedding_model(ollama_info)
+    embedding_status = await asyncio.to_thread(knowledge_index.embedding_status)
     session_status = session_tracker.get_status()
     try:
         cloud_call_status = await asyncio.to_thread(
@@ -4920,6 +4996,9 @@ async def health(request: Request):
         knowledge_review_schedule_missing_document_count=int(
             knowledge_status["review_schedule_missing_document_count"] or 0
         ),
+        knowledge_chunk_count=int(embedding_status["chunk_count"]),
+        knowledge_embedded_chunk_count=int(embedding_status["embedded_chunk_count"]),
+        knowledge_semantic_ready=bool(embedding_status["semantic_ready"]),
     )
 
 

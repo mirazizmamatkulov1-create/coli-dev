@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "description": "Held-out RU/EN questions written before fusion settings were tuned on rag_eval_questions.json. Use them only to confirm a chosen setting, not to tune it.",
+  "questions": [
+    {
+      "id": "holdout-math-systems-ru",
+      "lang": "ru",
+      "subject": "mathematics",
+      "question": "Что значит, если у системы двух уравнений прямые на графике параллельны?",
+      "relevant": ["02_Areas/Mathematics/lessons/systems_of_linear_equations.md"]
+    },
+    {
+      "id": "holdout-math-percent-en",
+      "lang": "en",
+      "subject": "mathematics",
+      "question": "What percentage is 3 out of 8?",
+      "relevant": ["02_Areas/Mathematics/lessons/numbers_fractions_and_percentages.md"]
+    },
+    {
+      "id": "holdout-math-parabola-ru",
+      "lang": "ru",
+      "subject": "mathematics",
+      "question": "Как сдвинуть график y = x² на три единицы вверх и что станет с вершиной?",
+      "relevant": ["02_Areas/Mathematics/lessons/quadratic_functions_and_transformations.md"]
+    },
+    {
+      "id": "holdout-physics-wave-en",
+      "lang": "en",
+      "subject": "physics",
+      "question": "How do I get the period of a wave if I know how many times per second it repeats?",
+      "relevant": ["02_Areas/Physics/lessons/oscillations_and_waves.md"]
+    },
+    {
+      "id": "holdout-physics-uncertainty-ru",
+      "lang": "ru",
+      "subject": "physics",
+      "question": "Как правильно записать результат измерения линейкой вместе с погрешностью?",
+      "relevant": ["02_Areas/Physics/lessons/measurement_units_and_uncertainty.md"]
+    },
+    {
+      "id": "holdout-biology-food-chain-en",
+      "lang": "en",
+      "subject": "biology",
+      "question": "Why is there less energy available at each higher level of a food chain?",
+      "relevant": [
+        "02_Areas/Biology/lessons/ecosystem_energy_flow.md",
+        "02_Areas/Biology/lessons/food_webs_and_matter_cycles.md"
+      ]
+    },
+    {
+      "id": "holdout-biology-protein-ru",
+      "lang": "ru",
+      "subject": "biology",
+      "question": "Как запись в ДНК превращается в готовый белок в клетке?",
+      "relevant": [
+        "02_Areas/Biology/lessons/gene_expression_and_regulation.md",
+        "02_Areas/Biology/lessons/dna_genes_and_traits.md"
+      ]
+    },
+    {
+      "id": "holdout-zoology-symmetry-en",
+      "lang": "en",
+      "subject": "zoology",
+      "question": "Why is a starfish shaped like a wheel while a butterfly has matching left and right halves?",
+      "relevant": ["02_Areas/Zoology/lessons/symmetry_and_body_plans.md"]
+    },
+    {
+      "id": "holdout-programming-binary-search-ru",
+      "lang": "ru",
+      "subject": "programming",
+      "question": "Сколько шагов нужно двоичному поиску в отсортированном списке из тысячи элементов?",
+      "relevant": ["02_Areas/Programming/lessons/search_and_complexity.md"]
+    },
+    {
+      "id": "holdout-english-conditional-en",
+      "lang": "en",
+      "subject": "english",
+      "question": "When should I say 'If I were you' instead of 'If I am you'?",
+      "relevant": ["02_Areas/English/lessons/zero_first_second_conditionals.md"]
+    }
+  ]
+}

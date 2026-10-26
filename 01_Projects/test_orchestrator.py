@@ -134,7 +134,7 @@ def _reset_session_tracker(monkeypatch, tmp_path):
     monkeypatch.setattr(orchestrator, "OLLAMA_EMBEDDING_AUTO_MODEL", "")
     monkeypatch.setattr(orchestrator.knowledge_index, "embedding_provider", None)
     monkeypatch.setattr(orchestrator.knowledge_index, "_embedding_retry_after", 0.0)
-    # Never embed the real course corpus from route tests.
+    # Never embed the real course corpus from route tests. / Тесты маршрутов не индексируют настоящий курс.
     monkeypatch.setattr(
         orchestrator.knowledge_index, "start_embedding_warmup", MagicMock(return_value=False)
     )
@@ -1814,7 +1814,7 @@ class TestOllamaEmbeddingModelSettings:
             "configured": True,
         }
 
-        # Removing the model from Ollama returns to keyword search.
+        # Removing the model from Ollama returns to keyword search. / Модель удалена — снова поиск по словам.
         orchestrator._sync_automatic_embedding_model({"models": ["qwen2.5-coder:7b"]})
 
         assert orchestrator._embedding_provider is None
@@ -3343,6 +3343,7 @@ class TestStreamingChat:
             patch("orchestrator._retrieve_local_course_sources", AsyncMock(return_value=[local_source])),
             patch("orchestrator._retrieve_obsidian_sources", AsyncMock(return_value=[])),
             # The real monitor reads official snapshots from the learner's own index.
+            # Настоящий монитор читает официальные источники из индекса самого ученика.
             patch("orchestrator._retrieve_licensed_official_sources", AsyncMock(return_value=[])),
         ):
             response = client.post("/chat/stream", json={
@@ -4563,6 +4564,24 @@ class TestConsiliumEngine:
         agents = {entry["agent"] for entry in log._entries}
         assert {"gemini-flash", "kimi", "ollama-gen", "freebuff", "qwen", "final-synthesis"} <= agents
 
+    def test_ollama_answer_request_turns_off_hidden_reasoning(self):
+        captured = {}
+
+        async def handle_request(request):
+            captured.update(json.loads(request.content))
+            return httpx.Response(
+                200, json={"model": "qwen3.5:latest", "message": {"content": "Ответ"}, "done": True}
+            )
+
+        async def ask():
+            async with httpx.AsyncClient(transport=httpx.MockTransport(handle_request)) as http_client:
+                engine = orchestrator.ConsiliumEngine(http_client, ollama_client=http_client)
+                return await engine._ask_ollama("Вопрос", "system", "test", model="qwen3.5:latest")
+
+        assert asyncio.run(ask()) == "Ответ"
+        assert captured["think"] is False
+        assert captured["options"]["num_predict"] == 1024
+
     def test_ollama_chat_stream_uses_ndjson_incrementally(self, monkeypatch):
         chunks = [
             b'{"message":{"content":"first"}}\n{"message"',
@@ -4584,6 +4603,7 @@ class TestConsiliumEngine:
             assert payload["stream"] is True
             assert payload["model"] == "qwen3:8b"
             assert payload["options"]["num_predict"] == 1024
+            assert payload["think"] is False
             return httpx.Response(200, stream=ChunkedBody())
 
         async def collect_chunks():

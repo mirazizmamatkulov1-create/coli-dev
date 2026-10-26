@@ -57,6 +57,8 @@ def test_keyword_only_retrieval_baseline_runs_offline() -> None:
     assert summary["questions"] == len(rag_eval.load_questions())
     # Keyword search found 15 of 20 lessons in the 2026-10-26 run; a large drop
     # means tokenisation or ranking regressed.
+    # По словам находилось 15 из 20 уроков (прогон 2026-10-26); сильное падение
+    # значит, что сломались токенизация или ранжирование.
     assert summary["hit_at_4"] >= 0.5
 
 

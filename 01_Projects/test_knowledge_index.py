@@ -989,6 +989,7 @@ def test_large_embedding_gap_is_filled_in_background_while_keyword_search_answer
     index = KnowledgeIndex(project, tmp_path / "state" / "knowledge.sqlite3", provider)
 
     # 20 chunks exceed one inline batch: answer by keywords and start the pass.
+    # 20 фрагментов больше одного пакета: отвечаем по словам и запускаем проход.
     first = index.refresh_and_search("derivatives rates", limit=1)
     assert first[0]["path"] == "02_Areas/Mathematics/calculus.md"
     assert index._warmup_thread is not None
@@ -999,6 +1000,7 @@ def test_large_embedding_gap_is_filled_in_background_while_keyword_search_answer
     assert [len(call) for call in provider.calls] == [16, 4]
 
     # No shared keyword: only the vectors can find the calculus lesson now.
+    # Общих слов нет: урок по анализу теперь находят только векторы.
     semantic = index.refresh_and_search("optimization methods", limit=1)
     assert semantic[0]["path"] == "02_Areas/Mathematics/calculus.md"
     assert provider.calls[-1] == ["optimization methods"]
@@ -1023,6 +1025,7 @@ def test_background_pass_discards_vectors_for_lessons_edited_meanwhile(tmp_path:
             self.calls.append(texts)
             if len(self.calls) == 1:
                 # The learner saves the lesson while Ollama is still working.
+                # Ученик сохраняет урок, пока Ollama ещё считает.
                 lesson.write_text("# Cells\n\nFresh membrane notes.\n", encoding="utf-8")
                 index.refresh_sources()
             return [[1.0, 0.0] if "fresh" in text.casefold() else [0.0, 1.0] for text in texts]

@@ -44,17 +44,26 @@ _MAX_RESULTS_PER_DOCUMENT = 2
 # Keyword scoring normalises length against fixed reference lengths, close to
 # the course averages in October 2026, rather than the live corpus average:
 # lengthening lessons in one subject must not flip close rankings elsewhere.
+# Длина нормируется по фиксированным опорным значениям (близким к средним курса
+# на октябрь 2026), а не по средней живого корпуса: рост уроков одного предмета
+# не должен переворачивать близкие места в другом.
 _REFERENCE_CHUNK_TOKENS = 64
 _REFERENCE_DOCUMENT_TOKENS = 1024
 # A passage ranks by its own keyword match plus its whole lesson's match, each
 # scaled to the best score for the question, so a lesson that is about the
 # question beats one paragraph that merely repeats its words.
+# Фрагмент оценивается по своему совпадению плюс совпадению всего урока (оба
+# делятся на лучший результат по вопросу): урок по теме вопроса обгоняет абзац,
+# где просто повторяются слова запроса.
 _DOCUMENT_SCORE_WEIGHT = 1.0
 _MIN_SEMANTIC_SIMILARITY = 0.25
 # Reciprocal-rank fusion of the keyword and vector rankings. With equal weights
 # a chunk sharing one incidental word outranked the best meaning match; weight 3
 # for vectors was tuned on rag_eval_questions.json and confirmed on the holdout
 # set (project-plan/research/rag-semantic-search-and-tutor-model-2026-10-26.md).
+# Слияние рангов (RRF) по словам и по векторам. При равных весах фрагмент с одним
+# случайным общим словом обгонял лучший ответ по смыслу; вес 3 для векторов подобран
+# на rag_eval_questions.json и подтверждён на контрольном наборе.
 _RRF_K = 60
 _LEXICAL_WEIGHT = 1.0
 _SEMANTIC_WEIGHT = 3.0
@@ -63,9 +72,13 @@ _EMBEDDING_BATCH_SIZE = 16
 # A question may embed one small batch inline (for example, a short edited
 # note). Larger gaps, such as the first full-corpus pass, which takes minutes
 # on an M1, are filled by a background thread while keyword search answers.
+# Внутри вопроса досчитывается не больше одного пакета (например, короткий
+# изменённый урок). Большие пропуски, как первый проход по всему корпусу (минуты
+# на M1), заполняет фоновый поток, пока отвечает поиск по словам.
 _INLINE_EMBEDDING_CHUNKS = _EMBEDDING_BATCH_SIZE
 _EMBEDDING_RETRY_SECONDS = 60
 # Some embedding families expect an instruction on the query side only.
+# Некоторым моделям эмбеддингов нужна инструкция только перед вопросом.
 _QUERY_INSTRUCTIONS = {
     "qwen3-embedding": (
         "Instruct: Given a student's study question, retrieve course passages that answer it\nQuery: "
@@ -311,6 +324,8 @@ class KnowledgeIndex:
         self._warmup_thread: threading.Thread | None = None
         # Decoded unit vectors keyed by chunk and tagged with the document digest,
         # so each question does not re-parse megabytes of JSON from SQLite.
+        # Разобранные единичные векторы по фрагментам с хешем документа, чтобы
+        # каждый вопрос не разбирал заново мегабайты JSON из SQLite.
         self._vector_cache_model: str | None = None
         self._vector_cache: dict[tuple[str, int], tuple[str, array]] = {}
 
@@ -646,6 +661,8 @@ class KnowledgeIndex:
     def _embedding_failed(self, error: Exception) -> None:
         # Ollama is optional. A missing model, timeout, or malformed response
         # must never make curated offline keyword retrieval unavailable.
+        # Ollama необязательна: нет модели, таймаут или кривой ответ не должны
+        # отключать офлайн-поиск по словам.
         self._embedding_retry_after = time.monotonic() + _EMBEDDING_RETRY_SECONDS
         logger.info(
             "Local embeddings unavailable; using lexical search",
@@ -721,6 +738,8 @@ class KnowledgeIndex:
         for row, vector in zip(rows, vectors, strict=True):
             # The digest guard drops a vector computed for a lesson that was
             # edited while the background pass was waiting for Ollama.
+            # Проверка хеша отбрасывает вектор урока, изменённого, пока фоновый
+            # проход ждал Ollama.
             stored = connection.execute(
                 """
                 INSERT OR REPLACE INTO chunk_embeddings(path, chunk_index, model, vector_json)
@@ -762,6 +781,7 @@ class KnowledgeIndex:
                     return True
                 if max_rounds is None:
                     # Allow for lessons edited mid-pass, but never loop forever.
+                    # Учитываем уроки, изменённые во время прохода, но без бесконечного цикла.
                     max_rounds = 2 * math.ceil(len(missing) / _EMBEDDING_BATCH_SIZE) + 2
                 max_rounds -= 1
                 if max_rounds < 0:

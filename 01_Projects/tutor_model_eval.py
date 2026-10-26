@@ -56,6 +56,7 @@ def parse_variant(value: str) -> dict[str, Any]:
 
 def _orchestrator():
     # Keep the app's own per-user files untouched when the backend module loads.
+    # Не трогаем личные файлы приложения при загрузке модуля backend.
     os.environ.setdefault("COLIDEV_DATA_DIR", tempfile.mkdtemp(prefix="colidev-tutor-eval-"))
     import orchestrator
 
@@ -79,7 +80,7 @@ def build_prompts(
         "ru",
     )
     engine = orchestrator.ConsiliumEngine(None, "ru", None)
-    # Mirrors ConsiliumEngine.stream_local.
+    # Mirrors ConsiliumEngine.stream_local. / Повторяет ConsiliumEngine.stream_local.
     user_message = (
         "You are the local learning assistant powered by Ollama. "
         f"Answer in {engine.output_language}; explain carefully with useful examples. "
@@ -170,6 +171,7 @@ def run(
         for variant in variants:
             started = time.perf_counter()
             # An empty generate request only loads the model, so answer timings exclude it.
+            # Пустой запрос generate только загружает модель: загрузка не входит во время ответа.
             client.post(f"{OLLAMA_URL}/api/generate", json={"model": variant["model"]}).raise_for_status()
             load_seconds = time.perf_counter() - started
             answers = []

@@ -250,6 +250,9 @@ OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "").strip()
 # local Ollama, unless OLLAMA_EMBEDDING_MODEL or the Control Center says otherwise.
 # An empty value turns the automatic choice off. See
 # project-plan/research/rag-semantic-search-and-tutor-model-2026-10-26.md.
+# Многоязычная модель эмбеддингов RU/EN включается сама, когда установлена в
+# локальной Ollama, если OLLAMA_EMBEDDING_MODEL или Центр управления не задают
+# другое. Пустое значение выключает автоматический выбор.
 OLLAMA_EMBEDDING_AUTO_MODEL = os.getenv("OLLAMA_EMBEDDING_AUTO_MODEL", "bge-m3").strip()
 
 # Таймауты
@@ -2437,6 +2440,11 @@ class ConsiliumEngine:
                 {"role": "user", "content": message},
             ],
             "stream": False,
+            # Thinking models (such as qwen3.5) otherwise spend the whole output
+            # budget on hidden reasoning; models without thinking ignore this.
+            # Иначе «думающие» модели (например, qwen3.5) тратят весь лимит ответа на
+            # скрытые рассуждения; модели без этого режима флаг игнорируют.
+            "think": False,
             "options": {"num_predict": 1024},
         }
         try:
@@ -2485,6 +2493,11 @@ class ConsiliumEngine:
                 {"role": "user", "content": message},
             ],
             "stream": True,
+            # Without this, qwen3.5 returned an empty answer for 8 of 10 tutor
+            # questions: its hidden reasoning used all 1024 output tokens.
+            # Без этого qwen3.5 вернула пустой ответ на 8 из 10 вопросов тьютору:
+            # скрытые рассуждения съели все 1024 токена.
+            "think": False,
             "options": {"num_predict": 1024},
         }
         try:
@@ -2830,6 +2843,7 @@ def _ollama_embedding_model_payload() -> dict[str, str | bool | None]:
     saved = ollama_embedding_model_settings.get()
     if saved["source"] == "disabled" and _embedding_provider is not None:
         # Nothing was chosen explicitly, so the active model is the automatic default.
+        # Явного выбора нет, значит активна модель, включённая автоматически.
         return {"model": _embedding_provider.model_name, "source": "automatic", "configured": True}
     return saved
 
@@ -2846,6 +2860,8 @@ def _apply_ollama_embedding_model(model: str | None) -> None:
     if provider is not None:
         # The first pass over the course takes minutes on an M1; keyword search
         # answers questions until the background pass completes.
+        # Первый проход по курсу на M1 занимает минуты; до его конца отвечает
+        # поиск по словам.
         knowledge_index.start_embedding_warmup()
 
 

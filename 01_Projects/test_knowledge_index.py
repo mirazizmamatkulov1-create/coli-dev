@@ -921,6 +921,128 @@ def test_embeddings_fail_safely_to_lexical_search(tmp_path: Path) -> None:
     assert provider.call_count == 1  # Avoid a slow local timeout on every question.
 
 
+def _write_many_lessons(project: Path, count: int) -> None:
+    course = project / "02_Areas" / "Mathematics"
+    course.mkdir(parents=True)
+    (course / "calculus.md").write_text(
+        "# Differential calculus\n\nDerivatives measure local rates of change.\n",
+        encoding="utf-8",
+    )
+    for number in range(count - 1):
+        (course / f"note_{number:02d}.md").write_text(
+            f"# Arithmetic note {number}\n\nAdding whole numbers {number} and {number + 1}.\n",
+            encoding="utf-8",
+        )
+
+
+def test_large_embedding_gap_is_filled_in_background_while_keyword_search_answers(
+    tmp_path: Path,
+) -> None:
+    project = tmp_path / "project"
+    _write_many_lessons(project, 20)
+    provider = FakeEmbeddingProvider()
+    index = KnowledgeIndex(project, tmp_path / "state" / "knowledge.sqlite3", provider)
+
+    # 20 chunks exceed one inline batch: answer by keywords and start the pass.
+    first = index.refresh_and_search("derivatives rates", limit=1)
+    assert first[0]["path"] == "02_Areas/Mathematics/calculus.md"
+    assert index._warmup_thread is not None
+    index._warmup_thread.join(timeout=10)
+    assert index.embedding_status() == {
+        "chunk_count": 20, "embedded_chunk_count": 20, "semantic_ready": True,
+    }
+    assert [len(call) for call in provider.calls] == [16, 4]
+
+    # No shared keyword: only the vectors can find the calculus lesson now.
+    semantic = index.refresh_and_search("optimization methods", limit=1)
+    assert semantic[0]["path"] == "02_Areas/Mathematics/calculus.md"
+    assert provider.calls[-1] == ["optimization methods"]
+
+
+def test_background_pass_discards_vectors_for_lessons_edited_meanwhile(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    course = project / "02_Areas" / "Biology"
+    course.mkdir(parents=True)
+    lesson = course / "cells.md"
+    lesson.write_text("# Cells\n\nOld membrane notes.\n", encoding="utf-8")
+    index = KnowledgeIndex(project, tmp_path / "state" / "knowledge.sqlite3")
+    index.refresh_sources()
+
+    class EditingProvider:
+        model = "editing-model"
+
+        def __init__(self) -> None:
+            self.calls: list[list[str]] = []
+
+        def embed(self, texts: list[str]) -> list[list[float]]:
+            self.calls.append(texts)
+            if len(self.calls) == 1:
+                # The learner saves the lesson while Ollama is still working.
+                lesson.write_text("# Cells\n\nFresh membrane notes.\n", encoding="utf-8")
+                index.refresh_sources()
+            return [[1.0, 0.0] if "fresh" in text.casefold() else [0.0, 1.0] for text in texts]
+
+    provider = EditingProvider()
+    index.set_embedding_provider(provider)
+
+    assert index.warm_embeddings() is True
+    assert len(provider.calls) == 2
+    connection = sqlite3.connect(index.database_path)
+    try:
+        stored = connection.execute(
+            "SELECT vector_json FROM chunk_embeddings WHERE model = 'editing-model'"
+        ).fetchall()
+    finally:
+        connection.close()
+    assert stored == [("[1.0,0.0]",)]
+
+
+def test_cached_vectors_are_decoded_once_across_questions(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    _write_many_lessons(project, 3)
+    database = tmp_path / "state" / "knowledge.sqlite3"
+    KnowledgeIndex(project, database, FakeEmbeddingProvider()).refresh_and_search("calculus")
+
+    index = KnowledgeIndex(project, database, FakeEmbeddingProvider())
+    with patch.object(KnowledgeIndex, "_decode_vector", wraps=KnowledgeIndex._decode_vector) as decode:
+        index.refresh_and_search("optimization methods")
+        assert decode.call_count == 3
+        result = index.refresh_and_search("optimization methods", limit=1)
+        assert decode.call_count == 3
+    assert result[0]["path"] == "02_Areas/Mathematics/calculus.md"
+
+
+def test_embedding_status_without_a_model_reports_keyword_mode(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    _write_many_lessons(project, 2)
+    index = KnowledgeIndex(project, tmp_path / "state" / "knowledge.sqlite3")
+    assert index.embedding_status()["semantic_ready"] is False
+    index.refresh_sources()
+
+    assert index.embedding_status() == {
+        "chunk_count": 2, "embedded_chunk_count": 0, "semantic_ready": False,
+    }
+    assert index.start_embedding_warmup() is False
+
+
+@pytest.mark.parametrize(
+    ("model", "expected_input"),
+    [
+        ("bge-m3:latest", "Why do cells swell?"),
+        (
+            "qwen3-embedding:0.6b",
+            "Instruct: Given a student's study question, retrieve course passages that answer it\n"
+            "Query: Why do cells swell?",
+        ),
+    ],
+)
+def test_query_embedding_adds_only_the_model_family_instruction(model: str, expected_input: str) -> None:
+    provider = OllamaEmbeddingProvider("http://127.0.0.1:11434", model)
+    with patch.object(provider, "embed", return_value=[[1.0]]) as embed:
+        provider.embed_query("Why do cells swell?")
+    embed.assert_called_once_with([expected_input])
+
+
 def test_ollama_embedding_provider_rejects_remote_endpoints() -> None:
     with pytest.raises(ValueError, match="loopback"):
         OllamaEmbeddingProvider("https://example.com", "embeddinggemma")

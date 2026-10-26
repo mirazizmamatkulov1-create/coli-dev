@@ -131,8 +131,13 @@ def _reset_session_tracker(monkeypatch, tmp_path):
         ),
     )
     monkeypatch.setattr(orchestrator, "_embedding_provider", None)
+    monkeypatch.setattr(orchestrator, "OLLAMA_EMBEDDING_AUTO_MODEL", "")
     monkeypatch.setattr(orchestrator.knowledge_index, "embedding_provider", None)
     monkeypatch.setattr(orchestrator.knowledge_index, "_embedding_retry_after", 0.0)
+    # Never embed the real course corpus from route tests.
+    monkeypatch.setattr(
+        orchestrator.knowledge_index, "start_embedding_warmup", MagicMock(return_value=False)
+    )
     monkeypatch.setattr(
         orchestrator,
         "subject_model_routes",
@@ -1791,6 +1796,82 @@ class TestOllamaEmbeddingModelSettings:
             "source": "disabled",
             "configured": False,
         }
+
+    def test_installed_default_embedding_model_is_used_automatically(self, client, monkeypatch):
+        monkeypatch.setattr(orchestrator, "OLLAMA_EMBEDDING_AUTO_MODEL", "bge-m3")
+        orchestrator.knowledge_index.start_embedding_warmup.reset_mock()  # Called at startup.
+
+        orchestrator._sync_automatic_embedding_model(
+            {"models": ["qwen2.5-coder:7b", "bge-m3:latest"]}
+        )
+
+        assert orchestrator._embedding_provider.model_name == "bge-m3:latest"
+        assert orchestrator.knowledge_index.embedding_provider is orchestrator._embedding_provider
+        orchestrator.knowledge_index.start_embedding_warmup.assert_called_once_with()
+        assert client.get("/settings/ollama-embedding-model").json() == {
+            "model": "bge-m3:latest",
+            "source": "automatic",
+            "configured": True,
+        }
+
+        # Removing the model from Ollama returns to keyword search.
+        orchestrator._sync_automatic_embedding_model({"models": ["qwen2.5-coder:7b"]})
+
+        assert orchestrator._embedding_provider is None
+        assert orchestrator.knowledge_index.embedding_provider is None
+        assert client.get("/settings/ollama-embedding-model").json()["source"] == "disabled"
+
+    def test_health_reports_the_automatic_embedding_model(self, client, monkeypatch, tmp_path):
+        monkeypatch.setattr(orchestrator, "OLLAMA_EMBEDDING_AUTO_MODEL", "bge-m3")
+        monkeypatch.setattr(orchestrator.knowledge_index, "database_path", tmp_path / "knowledge.sqlite3")
+        with patch.object(orchestrator, "_check_ollama", AsyncMock(return_value={
+            "available": True,
+            "version": "0.40.11",
+            "models": ["bge-m3:latest", "qwen2.5-coder:7b"],
+            "model_ready": True,
+        })):
+            data = client.get("/health").json()
+
+        assert data["ollama_embedding_model"] == "bge-m3:latest"
+        assert data["knowledge_semantic_ready"] is False
+        assert data["knowledge_embedded_chunk_count"] == data["knowledge_chunk_count"] == 0
+
+    def test_explicitly_disabled_embeddings_stay_off_when_default_is_installed(
+        self, client, monkeypatch
+    ):
+        monkeypatch.setattr(orchestrator, "OLLAMA_EMBEDDING_AUTO_MODEL", "bge-m3")
+        assert client.put("/settings/ollama-embedding-model", json={"model": None}).status_code == 200
+
+        orchestrator._sync_automatic_embedding_model({"models": ["bge-m3:latest"]})
+
+        assert orchestrator._embedding_provider is None
+        assert client.get("/settings/ollama-embedding-model").json() == {
+            "model": None,
+            "source": "settings",
+            "configured": False,
+        }
+
+    def test_unknown_ollama_inventory_keeps_the_current_embedding_route(self, monkeypatch):
+        monkeypatch.setattr(orchestrator, "OLLAMA_EMBEDDING_AUTO_MODEL", "bge-m3")
+        orchestrator._sync_automatic_embedding_model({"models": ["bge-m3:latest"]})
+        active = orchestrator._embedding_provider
+
+        orchestrator._sync_automatic_embedding_model({"available": False, "models": None})
+
+        assert orchestrator._embedding_provider is active
+
+    @pytest.mark.parametrize(
+        ("name", "installed", "expected"),
+        [
+            ("bge-m3", ["bge-m3:latest"], "bge-m3:latest"),
+            ("bge-m3", ["bge-m3:567m"], "bge-m3:567m"),
+            ("bge-m3:latest", ["bge-m3:latest"], "bge-m3:latest"),
+            ("bge-m3:567m", ["bge-m3:latest"], None),
+            ("bge-m3", ["bge-m3-large:latest", "qwen3:8b"], None),
+        ],
+    )
+    def test_installed_ollama_model_matches_tags(self, name, installed, expected):
+        assert orchestrator._installed_ollama_model(name, installed) == expected
 
 
 class TestFinalSynthesisRouting:

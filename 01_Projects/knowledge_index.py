@@ -11,11 +11,13 @@ import ipaddress
 import json
 import logging
 import math
+import operator
 import os
 import re
 import sqlite3
 import threading
 import time
+from array import array
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
@@ -39,6 +41,24 @@ _MAX_DOCUMENTS = 2000
 _MAX_TOTAL_BYTES = 64 * 1024 * 1024
 _MAX_RESULTS_PER_DOCUMENT = 2
 _MIN_SEMANTIC_SIMILARITY = 0.25
+# Reciprocal-rank fusion of the keyword and vector rankings. Tuned on
+# rag_eval_questions.json; see project-plan/research/.
+_RRF_K = 60
+_LEXICAL_WEIGHT = 1.0
+_SEMANTIC_WEIGHT = 1.0
+_FUSION_CANDIDATES: int | None = None
+_EMBEDDING_BATCH_SIZE = 16
+# A question may embed one small batch inline (for example, a short edited
+# note). Larger gaps, such as the first full-corpus pass, which takes minutes
+# on an M1, are filled by a background thread while keyword search answers.
+_INLINE_EMBEDDING_CHUNKS = _EMBEDDING_BATCH_SIZE
+_EMBEDDING_RETRY_SECONDS = 60
+# Some embedding families expect an instruction on the query side only.
+_QUERY_INSTRUCTIONS = {
+    "qwen3-embedding": (
+        "Instruct: Given a student's study question, retrieve course passages that answer it\nQuery: "
+    ),
+}
 _IGNORED_DIRS = {
     ".git", ".obsidian", "__pycache__", "build", "dist", "node_modules", "vendor",
 }
@@ -182,9 +202,15 @@ class OllamaEmbeddingProvider:
         self.model_name = model.strip()
         self.model = f"ollama:{self.base_url}:{self.model_name}"
         self.timeout_seconds = max(1, min(float(timeout_seconds), 120))
+        family = self.model_name.rsplit("/", 1)[-1].split(":", 1)[0].casefold()
+        self.query_instruction = _QUERY_INSTRUCTIONS.get(family, "")
+
+    def embed_query(self, text: str) -> list[list[float]]:
+        """Embed a search question, adding the model family's query instruction."""
+        return self.embed([f"{self.query_instruction}{text}"])
 
     def embed(self, texts: list[str]) -> list[list[float]]:
-        if not texts or len(texts) > 16 or any(not text.strip() for text in texts):
+        if not texts or len(texts) > _EMBEDDING_BATCH_SIZE or any(not text.strip() for text in texts):
             raise ValueError("Ollama embedding input must contain 1 to 16 non-empty texts")
         import httpx
 
@@ -224,6 +250,12 @@ class KnowledgeIndex:
         self.embedding_provider = embedding_provider
         self._lock = threading.RLock()
         self._embedding_retry_after = 0.0
+        self._warmup_lock = threading.Lock()
+        self._warmup_thread: threading.Thread | None = None
+        # Decoded unit vectors keyed by chunk and tagged with the document digest,
+        # so each question does not re-parse megabytes of JSON from SQLite.
+        self._vector_cache_model: str | None = None
+        self._vector_cache: dict[tuple[str, int], tuple[str, array]] = {}
 
     def set_embedding_provider(self, provider: EmbeddingProvider | None) -> None:
         """Switch the local embedding route and clear any previous failure backoff."""
@@ -505,15 +537,14 @@ class KnowledgeIndex:
                 if refresh_only:
                     return []
 
-                embedding_model, query_vector = self._prepare_embeddings(
-                    connection, normalized_query
-                )
+                semantic = self._prepare_embeddings(connection, normalized_query)
+                query_vector, document_vectors = semantic if semantic else (None, None)
                 return self._search(
                     connection,
                     normalized_query,
                     max(1, min(limit, 8)),
-                    embedding_model=embedding_model,
                     query_vector=query_vector,
+                    document_vectors=document_vectors,
                 )
             finally:
                 connection.close()
@@ -550,112 +581,201 @@ class KnowledgeIndex:
         except (TypeError, ValueError, OverflowError, json.JSONDecodeError):
             return None
 
-    def _prepare_embeddings(
-        self, connection: sqlite3.Connection, query: str
-    ) -> tuple[str | None, list[float] | None]:
-        """Best-effort local embeddings; lexical retrieval remains the fallback."""
-        provider = self.embedding_provider
+    @staticmethod
+    def _active_model(provider: EmbeddingProvider | None) -> str | None:
         model = getattr(provider, "model", None)
-        if (
-            provider is None
-            or not isinstance(model, str)
-            or not model.strip()
-            or time.monotonic() < self._embedding_retry_after
-        ):
-            return None, None
+        return model if provider is not None and isinstance(model, str) and model.strip() else None
 
+    def _embedding_failed(self, error: Exception) -> None:
+        # Ollama is optional. A missing model, timeout, or malformed response
+        # must never make curated offline keyword retrieval unavailable.
+        self._embedding_retry_after = time.monotonic() + _EMBEDDING_RETRY_SECONDS
+        logger.info(
+            "Local embeddings unavailable; using lexical search",
+            extra={"error_type": type(error).__name__},
+        )
+
+    def _load_document_vectors(
+        self, connection: sqlite3.Connection, model: str
+    ) -> tuple[list[sqlite3.Row], dict[tuple[str, int], array]]:
+        """Return chunks that still lack a vector and the cached vectors of the rest."""
         chunk_rows = connection.execute(
             """
-            SELECT c.path, c.chunk_index, d.title, c.heading, c.text
+            SELECT c.path, c.chunk_index, d.digest, d.title, c.heading, c.text
             FROM chunks AS c JOIN documents AS d ON d.path = c.path
             ORDER BY c.path, c.chunk_index
             """
         ).fetchall()
-        if not chunk_rows:
-            return None, None
+        if self._vector_cache_model != model:
+            self._vector_cache_model = model
+            self._vector_cache = {}
+        cache = self._vector_cache
+        live = {(row["path"], row["chunk_index"]): row["digest"] for row in chunk_rows}
+        for key in [key for key, (digest, _) in cache.items() if live.get(key) != digest]:
+            del cache[key]
 
-        cached_rows = connection.execute(
-            "SELECT path, chunk_index, vector_json FROM chunk_embeddings WHERE model = ?",
-            (model,),
-        ).fetchall()
-        cached: dict[tuple[str, int], list[float]] = {}
-        dimensions: set[int] = set()
-        for row in cached_rows:
-            vector = self._decode_vector(row["vector_json"])
-            if vector is None:
-                connection.execute(
-                    "DELETE FROM chunk_embeddings WHERE path = ? AND chunk_index = ? AND model = ?",
-                    (row["path"], row["chunk_index"], model),
-                )
-                continue
-            cached[(row["path"], row["chunk_index"])] = vector
-            dimensions.add(len(vector))
+        stale_paths = sorted({
+            row["path"] for row in chunk_rows if (row["path"], row["chunk_index"]) not in cache
+        })
+        for path in stale_paths:
+            for row in connection.execute(
+                "SELECT chunk_index, vector_json FROM chunk_embeddings WHERE model = ? AND path = ?",
+                (model, path),
+            ).fetchall():
+                key = (path, row["chunk_index"])
+                if key not in live or key in cache:
+                    continue
+                vector = self._decode_vector(row["vector_json"])
+                if vector is None:
+                    connection.execute(
+                        "DELETE FROM chunk_embeddings WHERE path = ? AND chunk_index = ? AND model = ?",
+                        (path, row["chunk_index"], model),
+                    )
+                    continue
+                cache[key] = (live[key], array("d", vector))
 
-        if len(dimensions) > 1:
+        if len({len(vector) for _, vector in cache.values()}) > 1:
             # A model tag should have one vector shape. Discard mixed cache data
             # and rebuild it instead of silently mixing incompatible vectors.
             connection.execute("DELETE FROM chunk_embeddings WHERE model = ?", (model,))
-            connection.commit()
-            cached.clear()
-            dimensions.clear()
+            cache.clear()
+        connection.commit()
 
-        missing = [
-            row for row in chunk_rows
-            if (row["path"], row["chunk_index"]) not in cached
-        ]
+        missing = [row for row in chunk_rows if (row["path"], row["chunk_index"]) not in cache]
+        return missing, {key: vector for key, (_, vector) in cache.items()}
+
+    @classmethod
+    def _embed_rows(cls, provider: EmbeddingProvider, rows: list[sqlite3.Row]) -> list[list[float]]:
+        texts = [f"{row['title']}\n{row['heading']}\n{row['path']}\n{row['text']}" for row in rows]
+        return cls._normalise_vectors(provider.embed(texts), len(rows))
+
+    def _store_vectors(
+        self,
+        connection: sqlite3.Connection,
+        model: str,
+        rows: list[sqlite3.Row],
+        vectors: list[list[float]],
+    ) -> None:
+        dimensions = {len(vector) for _, vector in self._vector_cache.values()}
+        if len({len(vector) for vector in vectors}) != 1 or (
+            dimensions and len(vectors[0]) not in dimensions
+        ):
+            raise ValueError("Embedding dimension changed for the configured model")
+        for row, vector in zip(rows, vectors, strict=True):
+            # The digest guard drops a vector computed for a lesson that was
+            # edited while the background pass was waiting for Ollama.
+            stored = connection.execute(
+                """
+                INSERT OR REPLACE INTO chunk_embeddings(path, chunk_index, model, vector_json)
+                SELECT ?, ?, ?, ?
+                WHERE EXISTS (SELECT 1 FROM documents WHERE path = ? AND digest = ?)
+                """,
+                (
+                    row["path"], row["chunk_index"], model,
+                    json.dumps(vector, separators=(",", ":")), row["path"], row["digest"],
+                ),
+            ).rowcount
+            if stored and self._vector_cache_model == model:
+                self._vector_cache[(row["path"], row["chunk_index"])] = (row["digest"], array("d", vector))
+        connection.commit()
+
+    def warm_embeddings(self) -> bool:
+        """Embed every indexed chunk that lacks a vector; True when the cache is complete.
+
+        Ollama is called outside the index lock, so questions keep getting
+        keyword answers while the first full pass runs.
+        """
+        provider = self.embedding_provider
+        model = self._active_model(provider)
+        if model is None or time.monotonic() < self._embedding_retry_after:
+            return False
+        max_rounds: int | None = None
         try:
-            for offset in range(0, len(missing), 16):
-                batch = missing[offset:offset + 16]
-                texts = [
-                    f"{row['title']}\n{row['heading']}\n{row['path']}\n{row['text']}"
-                    for row in batch
-                ]
-                vectors = self._normalise_vectors(provider.embed(texts), len(batch))
-                batch_dimensions = {len(vector) for vector in vectors}
-                if len(batch_dimensions) != 1 or (
-                    dimensions and next(iter(batch_dimensions)) not in dimensions
-                ):
-                    raise ValueError("Embedding dimension changed for the configured model")
-                dimensions.update(batch_dimensions)
-                connection.executemany(
-                    """
-                    INSERT OR REPLACE INTO chunk_embeddings(path, chunk_index, model, vector_json)
-                    VALUES (?, ?, ?, ?)
-                    """,
-                    [
-                        (row["path"], row["chunk_index"], model, json.dumps(vector, separators=(",", ":")))
-                        for row, vector in zip(batch, vectors, strict=True)
-                    ],
-                )
-                connection.commit()
-
-            query_vectors = self._normalise_vectors(provider.embed([query]), 1)
-            query_vector = query_vectors[0]
-            if dimensions and len(query_vector) != next(iter(dimensions)):
-                raise ValueError("Query embedding dimension does not match indexed vectors")
-            complete = connection.execute(
-                "SELECT COUNT(*) FROM chunk_embeddings WHERE model = ?", (model,)
-            ).fetchone()[0]
-            if complete != len(chunk_rows):
-                return None, None
-            return model, query_vector
+            while True:
+                with self._lock:
+                    if self.embedding_provider is not provider:
+                        return False
+                    connection = self._connect()
+                    try:
+                        self._ensure_schema(connection)
+                        missing, _ = self._load_document_vectors(connection, model)
+                    finally:
+                        connection.close()
+                if not missing:
+                    return True
+                if max_rounds is None:
+                    # Allow for lessons edited mid-pass, but never loop forever.
+                    max_rounds = 2 * math.ceil(len(missing) / _EMBEDDING_BATCH_SIZE) + 2
+                max_rounds -= 1
+                if max_rounds < 0:
+                    return False
+                batch = missing[:_EMBEDDING_BATCH_SIZE]
+                vectors = self._embed_rows(provider, batch)
+                with self._lock:
+                    if self.embedding_provider is not provider:
+                        return False
+                    connection = self._connect()
+                    try:
+                        self._store_vectors(connection, model, batch, vectors)
+                    finally:
+                        connection.close()
         except Exception as error:
-            # Ollama is optional. A missing model, timeout, or malformed response
-            # must never make curated offline keyword retrieval unavailable.
-            self._embedding_retry_after = time.monotonic() + 60
-            logger.info(
-                "Local embeddings unavailable; using lexical search",
-                extra={"error_type": type(error).__name__},
+            self._embedding_failed(error)
+            return False
+
+    def start_embedding_warmup(self) -> bool:
+        """Fill missing vectors in a daemon thread; False if not needed or already running."""
+        if self._active_model(self.embedding_provider) is None or (
+            time.monotonic() < self._embedding_retry_after
+        ):
+            return False
+        with self._warmup_lock:
+            if self._warmup_thread is not None and self._warmup_thread.is_alive():
+                return False
+            self._warmup_thread = threading.Thread(
+                target=self.warm_embeddings, name="colidev-embedding-warmup", daemon=True
             )
-            return None, None
+            self._warmup_thread.start()
+        return True
+
+    def _prepare_embeddings(
+        self, connection: sqlite3.Connection, query: str
+    ) -> tuple[list[float], dict[tuple[str, int], array]] | None:
+        """Best-effort local embeddings; lexical retrieval remains the fallback."""
+        provider = self.embedding_provider
+        model = self._active_model(provider)
+        if model is None or time.monotonic() < self._embedding_retry_after:
+            return None
+        try:
+            missing, vectors = self._load_document_vectors(connection, model)
+            if not missing and not vectors:
+                return None
+            if len(missing) > _INLINE_EMBEDDING_CHUNKS:
+                self.start_embedding_warmup()
+                return None
+            if missing:
+                self._store_vectors(connection, model, missing, self._embed_rows(provider, missing))
+                missing, vectors = self._load_document_vectors(connection, model)
+                if missing:
+                    return None
+
+            embed_query = getattr(provider, "embed_query", None)
+            query_vectors = embed_query(query) if callable(embed_query) else provider.embed([query])
+            query_vector = self._normalise_vectors(query_vectors, 1)[0]
+            if len(query_vector) != len(next(iter(vectors.values()))):
+                raise ValueError("Query embedding dimension does not match indexed vectors")
+            return query_vector, vectors
+        except Exception as error:
+            self._embedding_failed(error)
+            return None
 
     def _search(
         self,
         connection: sqlite3.Connection,
         query: str,
         limit: int,
-        embedding_model: str | None = None,
         query_vector: list[float] | None = None,
+        document_vectors: dict[tuple[str, int], array] | None = None,
     ) -> list[dict[str, Any]]:
         rows = connection.execute(
             """
@@ -713,66 +833,51 @@ class KnowledgeIndex:
             key=lambda pair: (-pair[0], pair[1]["path"].casefold(), pair[1]["chunk_index"])
         )
         ranked: list[tuple[float, sqlite3.Row]] = lexical_ranked
-        if embedding_model and query_vector:
-            embedding_rows = connection.execute(
-                "SELECT path, chunk_index, vector_json FROM chunk_embeddings WHERE model = ?",
-                (embedding_model,),
-            ).fetchall()
-            vectors = {
-                (row["path"], row["chunk_index"]): self._decode_vector(row["vector_json"])
-                for row in embedding_rows
-            }
-            if len(vectors) == len(parsed) and all(vector is not None for vector in vectors.values()):
-                vector_dimensions = {len(vector) for vector in vectors.values() if vector is not None}
-                if vector_dimensions == {len(query_vector)}:
-                    scored_semantic = [
-                        (
-                            sum(
-                                query_value * document_value
-                                for query_value, document_value in zip(
-                                    query_vector,
-                                    vectors[(item[0]["path"], item[0]["chunk_index"])],
-                                    strict=True,
-                                )
-                            ),
-                            item,
-                        )
-                        for item in parsed
-                    ]
-                    semantic_ranked = [
-                        item for similarity, item in sorted(
-                            scored_semantic,
-                            key=lambda pair: (
-                                -pair[0], pair[1][0]["path"].casefold(), pair[1][0]["chunk_index"]
-                            ),
-                        )
-                        if similarity >= _MIN_SEMANTIC_SIMILARITY
-                    ]
-                    fused: dict[tuple[str, int], float] = {}
-                    row_by_key: dict[tuple[str, int], sqlite3.Row] = {}
-                    lexical_scores: dict[tuple[str, int], float] = {}
-                    for rank, (score, row) in enumerate(lexical_ranked, start=1):
-                        key = (row["path"], row["chunk_index"])
-                        fused[key] = fused.get(key, 0.0) + 1 / (60 + rank)
-                        row_by_key[key] = row
-                        lexical_scores[key] = score
-                    for rank, item in enumerate(semantic_ranked, start=1):
-                        row = item[0]
-                        key = (row["path"], row["chunk_index"])
-                        fused[key] = fused.get(key, 0.0) + 1 / (60 + rank)
-                        row_by_key[key] = row
-                    ranked = [
-                        (fused[key], row_by_key[key])
-                        for key in sorted(
-                            fused,
-                            key=lambda key: (
-                                -fused[key],
-                                -lexical_scores.get(key, 0.0),
-                                key[0].casefold(),
-                                key[1],
-                            ),
-                        )
-                    ]
+        keys = [(item[0]["path"], item[0]["chunk_index"]) for item in parsed]
+        if (
+            query_vector
+            and document_vectors
+            and all(key in document_vectors for key in keys)
+            and {len(document_vectors[key]) for key in keys} == {len(query_vector)}
+        ):
+            scored_semantic = [
+                (sum(map(operator.mul, query_vector, document_vectors[key])), item)
+                for key, item in zip(keys, parsed, strict=True)
+            ]
+            semantic_ranked = [
+                item for similarity, item in sorted(
+                    scored_semantic,
+                    key=lambda pair: (
+                        -pair[0], pair[1][0]["path"].casefold(), pair[1][0]["chunk_index"]
+                    ),
+                )
+                if similarity >= _MIN_SEMANTIC_SIMILARITY
+            ]
+            fused: dict[tuple[str, int], float] = {}
+            row_by_key: dict[tuple[str, int], sqlite3.Row] = {}
+            lexical_scores: dict[tuple[str, int], float] = {}
+            for rank, (score, row) in enumerate(lexical_ranked[:_FUSION_CANDIDATES], start=1):
+                key = (row["path"], row["chunk_index"])
+                fused[key] = fused.get(key, 0.0) + _LEXICAL_WEIGHT / (_RRF_K + rank)
+                row_by_key[key] = row
+                lexical_scores[key] = score
+            for rank, item in enumerate(semantic_ranked[:_FUSION_CANDIDATES], start=1):
+                row = item[0]
+                key = (row["path"], row["chunk_index"])
+                fused[key] = fused.get(key, 0.0) + _SEMANTIC_WEIGHT / (_RRF_K + rank)
+                row_by_key[key] = row
+            ranked = [
+                (fused[key], row_by_key[key])
+                for key in sorted(
+                    fused,
+                    key=lambda key: (
+                        -fused[key],
+                        -lexical_scores.get(key, 0.0),
+                        key[0].casefold(),
+                        key[1],
+                    ),
+                )
+            ]
         retrieved_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
         results: list[dict[str, Any]] = []
         per_document: Counter[str] = Counter()
@@ -820,6 +925,41 @@ class KnowledgeIndex:
             if len(results) >= limit:
                 break
         return results
+
+    def embedding_status(self) -> dict[str, int | bool]:
+        """Report how much of the course has vectors for the active embedding model."""
+        model = self._active_model(self.embedding_provider)
+        result: dict[str, int | bool] = {
+            "chunk_count": 0, "embedded_chunk_count": 0, "semantic_ready": False,
+        }
+        if not self.database_path.exists():
+            return result
+        with self._lock:
+            connection = self._connect()
+            try:
+                self._ensure_schema(connection)
+                connection.commit()
+                total = int(connection.execute("SELECT COUNT(*) FROM chunks").fetchone()[0])
+                embedded = 0
+                if model is not None:
+                    embedded = int(connection.execute(
+                        """
+                        SELECT COUNT(*) FROM chunk_embeddings AS e
+                        JOIN chunks AS c ON c.path = e.path AND c.chunk_index = e.chunk_index
+                        WHERE e.model = ?
+                        """,
+                        (model,),
+                    ).fetchone()[0])
+            except sqlite3.Error:
+                return result
+            finally:
+                connection.close()
+        result.update({
+            "chunk_count": total,
+            "embedded_chunk_count": embedded,
+            "semantic_ready": model is not None and total > 0 and embedded == total,
+        })
+        return result
 
     def status(self) -> dict[str, str | int | None]:
         """Return persisted index metadata without triggering a rescan."""

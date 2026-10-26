@@ -79,7 +79,7 @@ The scalar `λ` is the Lagrange multiplier: the factor that turns `∇g` into `�
 
 When `x = y`, the points are `(1/√2, 1/√2)` and `(−1/√2, −1/√2)`, with `f = 1/2` and `λ = 1/2`. When `x = −y`, the points are `(1/√2, −1/√2)` and `(−1/√2, 1/√2)`, with `f = −1/2` and `λ = −1/2`. The circle is closed and bounded and `f` is continuous, so by the Extreme Value Theorem (§4.7, Theorem 4.18) the largest and smallest values exist. Comparing every candidate gives the global maximum `1/2` and minimum `−1/2`.
 
-**Common mistake.** Treating every solution of the Lagrange system as a maximum. The system finds maxima, minima, and other stationary points alike; without comparing values or another argument, the type of a point has not been established.
+**Common mistake.** Treating every solution of the Lagrange system as a maximum. The system finds maxima, minima, and other stationary points alike; without comparing values or another argument, the type of a point remains unproven.
 
 **Why it matters next.** Machine learning is full of constrained problems. For example, principal component analysis (PCA) looks for the direction `w` of largest variance subject to `‖w‖ = 1`; the Lagrange condition for this problem leads to the eigenvector equation `Σw = λw`, which connects to the “Eigenvalues” topic on the route. For inequality constraints, the method is generalized by the Karush–Kuhn–Tucker (KKT) conditions, which underlie, for example, support vector machines and many numerical optimizers.
 

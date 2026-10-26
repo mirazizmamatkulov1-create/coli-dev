@@ -79,7 +79,7 @@ If the function is given as `f(x) = ax² + bx + c`, the vertex's horizontal coor
 
 **Example.** `f(x) = 2(x − 1)² − 8` has vertex `(1, −8)` and axis `x = 1`. Expanding gives `2x² − 4x − 6`, and `−b/(2a) = 4/4 = 1`: the same vertex. Find the zeros from `2(x − 1)² − 8 = 0`: `(x − 1)² = 4`, so `x − 1 = ±2`, giving `x = −1` or `x = 3`. They are symmetric about the axis `x = 1`. At `x = 0`, the value is `−6`.
 
-**Common mistake.** Reading the sign of `h` “as written”: in `(x + 2)²` the vertex is at `x = −2`, not `x = 2`. Terminology is another trap: OpenStax calls the vertex form `a(x − h)² + k` the *standard form* and `ax² + bx + c` the *general form*. Other textbooks may use different names, so rely on the formula itself rather than its label.
+**Common mistake.** Taking the sign of `h` “as written”: in `(x + 2)²` the vertex is at `x = −2`, not `x = 2`. Terminology is another trap: OpenStax calls the vertex form `a(x − h)² + k` the *standard form* and `ax² + bx + c` the *general form*. Other textbooks may use different names, so rely on the formula itself rather than its label.
 
 **Why it matters next.** In physics, the height of an object under constant acceleration is a quadratic function of time. In machine learning, the squared loss `(y − ŷ)²` has exactly one vertex, a minimum, which makes it convenient to minimize; gradient descent moves toward that vertex.
 

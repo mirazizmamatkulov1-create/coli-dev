@@ -69,7 +69,7 @@ Suppose a taxi ride costs 2 currency units to start (the starting charge) plus 3
 
 **Example.** For `k = 4`, `C(4) = 2 + 3 · 4 = 14`. As a table: `k = 0, 1, 2, 3` → `C = 2, 5, 8, 11`; each step in `k` adds 3. Distance cannot be negative, so the model domain is `k ≥ 0` and the fare is at least 2. The model's graph is not the whole line but a ray starting at `(0, 2)` and going to the right.
 
-**Common mistake.** Reading `C(4)` as the product `C · 4`. Here the parentheses mean “substitute 4 for `k`”, not “multiply by 4”.
+**Common mistake.** Treating `C(4)` as the product `C · 4`. Here the parentheses mean “substitute 4 for `k`”, not “multiply by 4”.
 
 **Why it matters next.** In Python a function looks almost the same: `def cost(k): return 2 + 3 * k`, and `cost(4)` returns `14`. In physics, equations of motion are functions of time, and a machine-learning model is a function that maps input features to a prediction.
 

@@ -842,11 +842,28 @@ final class LocalBackendSupervisor: ObservableObject {
     private var lastProbeError: String?
     private var lastBackendIdentity: String?
     private var portFileDirectoryURL: URL?
+    private var terminationObserver: NSObjectProtocol?
     private var baseURL: URL { BackendEndpointRegistry.baseURL }
 
     init() {
         // The bundled backend chooses a fresh ephemeral port for each app launch.
         BackendEndpointRegistry.reset()
+        // Stop the backend from the app's lifetime, not a window's: after the window is closed, a
+        // view-level observer is gone and quitting used to leave an orphaned backend running.
+        // Останавливаем backend по жизни приложения, а не окна.
+        terminationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.stop()
+        }
+    }
+
+    deinit {
+        if let terminationObserver {
+            NotificationCenter.default.removeObserver(terminationObserver)
+        }
     }
 
     var isReady: Bool {
@@ -942,6 +959,8 @@ final class LocalBackendSupervisor: ObservableObject {
             (Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String)
             .flatMap { $0.isEmpty ? nil : $0 } ?? "local"
         environment["DEV_MODE"] = "false"
+        // Lets the backend stop itself if the app crashes or is force-quit (parent_watchdog.py).
+        environment["COLIDEV_PARENT_PID"] = String(ProcessInfo.processInfo.processIdentifier)
         child.environment = environment
         let backendLogHandle = try? makeBackendLogHandle()
         if let backendLogHandle {

@@ -218,9 +218,6 @@ struct ContentView: View {
             await store.refreshAutoCostPolicy()
             await store.syncStudyProgress()
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
-            backendSupervisor.stop()
-        }
     }
 
     private func open(_ subject: Subject) {

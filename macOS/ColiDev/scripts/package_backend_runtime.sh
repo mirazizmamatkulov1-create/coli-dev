@@ -26,6 +26,7 @@ python3 -m PyInstaller \
     --name ColiDevBackend \
     --paths "$project_root/01_Projects" \
     --hidden-import keyring.backends.macOS \
+    --hidden-import parent_watchdog \
     --add-data "$project_root/01_Projects/ui.html:." \
     --distpath "$build_root/dist" \
     --workpath "$build_root/work" \

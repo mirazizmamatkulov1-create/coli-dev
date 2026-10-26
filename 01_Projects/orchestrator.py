@@ -5723,6 +5723,9 @@ def _publish_bound_port(port_file: str, port: int) -> None:
 if __name__ == "__main__":
     import uvicorn
 
+    from parent_watchdog import start_parent_watchdog_from_env
+
+    start_parent_watchdog_from_env()
     port_file = os.getenv("COLIDEV_PORT_FILE", "").strip()
     if PORT == 0 and port_file:
         server_socket = _bind_ephemeral_loopback_socket(HOST)

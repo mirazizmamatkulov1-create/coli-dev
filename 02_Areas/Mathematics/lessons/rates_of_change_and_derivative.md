@@ -3,7 +3,7 @@ subject: mathematics
 lesson_id: mathematics.rates_of_change_and_derivative
 level: intermediate
 languages: ru, en
-source_checked: 2026-10-12
+source_checked: 2026-10-26
 source_review_interval_days: 180
 ---
 
@@ -17,7 +17,9 @@ source_review_interval_days: 180
 
 ### Идея и механизм
 
-Средняя скорость изменения функции на отрезке от `x` до `x+h` — это наклон секущей:
+Средняя скорость поездки — это путь, делённый на время: 120 км за 2 часа дают 60 км/ч. Но спидометр показывает скорость **в данный момент**. Как получить её из одних только измерений положения? Нужно брать всё более короткие промежутки времени и смотреть, к какому числу стремится средняя скорость. Это число и есть производная.
+
+У прямой наклон одинаков везде (урок о наклоне). У кривой наклон меняется от точки к точке, поэтому его определяют через предел. Средняя скорость изменения функции на отрезке от `x` до `x+h` — это наклон секущей, проходящей через две точки графика; его задаёт разностное отношение:
 
 `(f(x+h) − f(x)) / h`, где `h ≠ 0`.
 
@@ -25,13 +27,19 @@ source_review_interval_days: 180
 
 `f′(x) = lim(h→0) (f(x+h) − f(x)) / h`.
 
-В частном случае `f(x)=x²`:
+Геометрически секущие при этом поворачиваются и приближаются к касательной, а `f′(x)` — наклон касательной.
 
-`((x+h)² − x²) / h = (2xh + h²) / h = 2x + h`.
+**Пример.** Для `f(x)=x²`:
 
-При `h → 0` значение `2x+h` стремится к `2x`, поэтому `f′(x)=2x`. Например, в точке `x=3` наклон касательной равен `6`. Нельзя просто подставить `h=0` в дробь: сначала нужно упростить выражение при `h≠0`, а затем вычислить предел.
+`((x+h)² − x²) / h = (x² + 2xh + h² − x²) / h = (2xh + h²) / h = 2x + h` (при `h ≠ 0`).
 
-Если `s(t)` описывает положение в метрах, а `t` — время в секундах, то `s′(t)` измеряется в метрах в секунду. Единицы производной всегда зависят от единиц выходной величины и входной переменной.
+При `h → 0` выражение `2x+h` стремится к `2x`, поэтому `f′(x)=2x`. Например, в точке `x=3` наклон касательной равен `6`.
+
+**Типичная ошибка.** Подставить `h=0` прямо в дробь: получится `0/0`, которое ничего не говорит. Сначала упрости выражение при `h≠0` (как в уроке о рациональных выражениях), и только потом вычисляй предел.
+
+Единицы производной — единицы выхода на единицу входа. Если `s(t)` — положение в метрах, а `t` — время в секундах, то `s′(t)` измеряется в метрах в секунду: это скорость.
+
+**Зачем это дальше.** В физике производная положения по времени — скорость, а производная скорости — ускорение. В машинном обучении градиентный спуск вычисляет наклон функции потерь по каждому параметру и сдвигает параметры в сторону уменьшения потерь (урок «Градиентный спуск и шаг обучения» в разделе «Программирование»). В Python производную можно приближённо проверить разностным отношением с малым `h`, например `(f(2 + 1e-6) - f(2)) / 1e-6 ≈ 4`.
 
 ### Исследуй и потренируйся
 
@@ -53,11 +61,11 @@ source_review_interval_days: 180
 
 ### Разбор
 
-Из определения получается `f′(x)=2x`. Поэтому `f′(2)=4`. Геометрически это наклон касательной к параболе в точке `(2,4)`.
+Из определения получается `f′(x)=2x`. Поэтому `f′(2)=2·2=4`. Геометрически это наклон касательной к параболе в точке `(2, 4)`. Ответ `2` — это само значение `x`, а не наклон; `8` — это `2 · f(2) = 2 · 4`: так выходит, если умножить на 2 значение функции вместо входа `x`.
 
 ### Границы модели
 
-Производная существует не во всех точках. У излома, разрыва, острого пика или вертикальной касательной обычного конечного двустороннего наклона может не быть. Производная в точке описывает локальное изменение, а не гарантирует поведение функции далеко от этой точки. Для вычисленного наклона указывай единицы и область, где функция определена.
+Производная существует не во всех точках. В точке разрыва производной нет никогда: дифференцируемая функция обязана быть непрерывной. Производной нет и в непрерывных точках с изломом (острым углом, как у `|x|` в нуле) или с вертикальной касательной (как у кубического корня в нуле). Производная в точке описывает локальное изменение и не гарантирует поведение функции далеко от этой точки. Для вычисленного наклона указывай единицы и область, где функция определена.
 
 ## English
 
@@ -67,7 +75,9 @@ Explain a derivative at a point as the limit of secant slopes, find it for `f(x)
 
 ### Idea and mechanism
 
-The average rate of change of a function from `x` to `x+h` is the secant slope:
+Average speed on a trip is distance divided by time: 120 km in 2 hours is 60 km/h. A speedometer, however, shows the speed **at this moment**. How can we get that from position measurements alone? Take shorter and shorter time intervals and see which number the average speed approaches. That number is the derivative.
+
+A line has the same slope everywhere (see the slope lesson). A curve's slope changes from point to point, so it is defined through a limit. The average rate of change of a function from `x` to `x+h` is the slope of the secant line through two points on the graph, given by the difference quotient:
 
 `(f(x+h) − f(x)) / h`, where `h ≠ 0`.
 
@@ -75,13 +85,19 @@ To find the instantaneous rate of change at `x`, shrink the step `h` toward zero
 
 `f′(x) = lim(h→0) (f(x+h) − f(x)) / h`.
 
-For `f(x)=x²`:
+Geometrically, the secant lines turn and approach the tangent line, and `f′(x)` is the tangent slope.
 
-`((x+h)² − x²) / h = (2xh + h²) / h = 2x + h`.
+**Example.** For `f(x)=x²`:
 
-As `h → 0`, `2x+h` approaches `2x`, so `f′(x)=2x`. At `x=3`, for example, the tangent slope is `6`. Do not substitute `h=0` into the fraction: first simplify while `h≠0`, then evaluate the limit.
+`((x+h)² − x²) / h = (x² + 2xh + h² − x²) / h = (2xh + h²) / h = 2x + h` (for `h ≠ 0`).
 
-If `s(t)` gives position in metres and `t` is time in seconds, then `s′(t)` is measured in metres per second. Derivative units depend on the units of the output and input variables.
+As `h → 0`, `2x+h` approaches `2x`, so `f′(x)=2x`. At `x=3`, for example, the tangent slope is `6`.
+
+**Common mistake.** Substituting `h=0` straight into the quotient: that gives `0/0`, which says nothing. First simplify while `h≠0` (as in the rational expressions lesson), then evaluate the limit.
+
+Derivative units are output units per input unit. If `s(t)` gives position in metres and `t` is time in seconds, then `s′(t)` is measured in metres per second: it is velocity.
+
+**Why it matters next.** In physics, the derivative of position with respect to time is velocity, and the derivative of velocity is acceleration. In machine learning, gradient descent computes the slope of the loss with respect to each parameter and moves the parameters in the direction that reduces the loss (see the “Gradient Descent and the Learning Rate” lesson in Programming). In Python, you can check a derivative numerically with a small `h`: `(f(2 + 1e-6) - f(2)) / 1e-6 ≈ 4`.
 
 ### Explore and practise
 
@@ -103,13 +119,17 @@ For `f(x)=x²`, what is the derivative at `x=2`?
 
 ### Explanation
 
-The definition gives `f′(x)=2x`, so `f′(2)=4`. Geometrically, this is the tangent slope to the parabola at `(2,4)`.
+The definition gives `f′(x)=2x`, so `f′(2)=2·2=4`. Geometrically, this is the tangent slope to the parabola at `(2, 4)`. The answer `2` is the value of `x` itself, not the slope; `8` is `2 · f(2) = 2 · 4`, which comes from doubling the function value instead of the input `x`.
 
 ### Limits
 
-A derivative does not exist at every point. At a corner, discontinuity, sharp cusp, or vertical tangent, the usual finite two-sided slope may not exist. A derivative describes local change; it does not guarantee how the function behaves far from that point. Include units and the domain on which the function is defined.
+A derivative does not exist at every point. At a discontinuity there is never a derivative: a differentiable function must be continuous. A derivative also fails to exist at continuous points with a corner (a sharp turn, like `|x|` at zero) or a vertical tangent (like the cube root at zero). A derivative describes local change; it does not guarantee how the function behaves far from that point. Include units and the domain on which the function is defined.
 
 ## Sources
 
-- OpenStax, *Calculus Volume 1*, [3.1 Defining the Derivative](https://openstax.org/books/calculus-volume-1/pages/3-1-defining-the-derivative) — derivative as the limit of secant slopes and instantaneous rate of change.
-- OpenStax, *Calculus Volume 1*, [3.2 The Derivative as a Function](https://openstax.org/books/calculus-volume-1/pages/3-2-the-derivative-as-a-function) — derivative function, graph interpretation, and differentiability.
+- OpenStax, *Calculus Volume 1*, [3.1 Defining the Derivative](https://openstax.org/books/calculus-volume-1/pages/3-1-defining-the-derivative) — derivative as the limit of a difference quotient (secant slopes), tangent line, instantaneous rate of change and velocity.
+- OpenStax, *Calculus Volume 1*, [3.2 The Derivative as a Function](https://openstax.org/books/calculus-volume-1/pages/3-2-the-derivative-as-a-function) — differentiability implies continuity; corners and vertical tangents.
+- OpenStax, *Calculus Volume 1*, [3.4 Derivatives as Rates of Change](https://openstax.org/books/calculus-volume-1/pages/3-4-derivatives-as-rates-of-change) — velocity as the derivative of position and acceleration as the derivative of velocity.
+- Google for Developers, *Machine Learning Crash Course*, [Linear regression: Gradient descent](https://developers.google.com/machine-learning/crash-course/linear-regression/gradient-descent) — gradient descent uses the slope of the loss to move parameters in the direction that reduces loss.
+
+OpenStax books are licensed CC BY-NC-SA 4.0. This lesson is written in original wording and does not copy textbook text or figures.

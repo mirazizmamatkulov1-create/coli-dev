@@ -1,0 +1,506 @@
+{
+  "embedding_model": "bge-m3:latest",
+  "fusion": {
+    "_RRF_K": 60,
+    "_LEXICAL_WEIGHT": 1.0,
+    "_SEMANTIC_WEIGHT": 3.0,
+    "_FUSION_CANDIDATES": null
+  },
+  "document_count": 80,
+  "top_k": 4,
+  "warmup_seconds": 0.4953537910041632,
+  "median_query_seconds": {
+    "lexical": 0.09072560449931188,
+    "semantic": 0.19229360450117383,
+    "hybrid": 0.19226512500245008
+  },
+  "summary": {
+    "lexical": {
+      "questions": 10,
+      "hit_at_1": 0.8,
+      "hit_at_4": 1.0,
+      "mrr": 0.9,
+      "main_lesson_found": 1.0
+    },
+    "semantic": {
+      "questions": 10,
+      "hit_at_1": 0.9,
+      "hit_at_4": 0.9,
+      "mrr": 0.9,
+      "main_lesson_found": 0.9
+    },
+    "hybrid": {
+      "questions": 10,
+      "hit_at_1": 1.0,
+      "hit_at_4": 1.0,
+      "mrr": 1.0,
+      "main_lesson_found": 1.0
+    }
+  },
+  "by_language": {
+    "lexical": {
+      "en": {
+        "questions": 5,
+        "hit_at_1": 0.8,
+        "hit_at_4": 1.0,
+        "mrr": 0.9,
+        "main_lesson_found": 1.0
+      },
+      "ru": {
+        "questions": 5,
+        "hit_at_1": 0.8,
+        "hit_at_4": 1.0,
+        "mrr": 0.9,
+        "main_lesson_found": 1.0
+      }
+    },
+    "semantic": {
+      "en": {
+        "questions": 5,
+        "hit_at_1": 0.8,
+        "hit_at_4": 0.8,
+        "mrr": 0.8,
+        "main_lesson_found": 0.8
+      },
+      "ru": {
+        "questions": 5,
+        "hit_at_1": 1.0,
+        "hit_at_4": 1.0,
+        "mrr": 1.0,
+        "main_lesson_found": 1.0
+      }
+    },
+    "hybrid": {
+      "en": {
+        "questions": 5,
+        "hit_at_1": 1.0,
+        "hit_at_4": 1.0,
+        "mrr": 1.0,
+        "main_lesson_found": 1.0
+      },
+      "ru": {
+        "questions": 5,
+        "hit_at_1": 1.0,
+        "hit_at_4": 1.0,
+        "mrr": 1.0,
+        "main_lesson_found": 1.0
+      }
+    }
+  },
+  "questions": {
+    "lexical": [
+      {
+        "id": "holdout-math-systems-ru",
+        "lang": "ru",
+        "subject": "mathematics",
+        "ranked": [
+          "02_Areas/Mathematics/lessons/systems_of_linear_equations.md",
+          "02_Areas/Mathematics/curriculum.md",
+          "02_Areas/Mathematics/lessons/quadratic_functions_and_transformations.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-math-percent-en",
+        "lang": "en",
+        "subject": "mathematics",
+        "ranked": [
+          "02_Areas/Mathematics/lessons/numbers_fractions_and_percentages.md",
+          "02_Areas/Programming/lessons/ml_baseline_and_holdout.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-math-parabola-ru",
+        "lang": "ru",
+        "subject": "mathematics",
+        "ranked": [
+          "02_Areas/Mathematics/lessons/quadratic_functions_and_transformations.md",
+          "02_Areas/Physics/lessons/measurement_units_and_uncertainty.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-physics-wave-en",
+        "lang": "en",
+        "subject": "physics",
+        "ranked": [
+          "02_Areas/Physics/lessons/oscillations_and_waves.md",
+          "02_Areas/English/lessons/reading_for_gist_and_detail.md",
+          "02_Areas/English/lessons/zero_first_second_conditionals.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-physics-uncertainty-ru",
+        "lang": "ru",
+        "subject": "physics",
+        "ranked": [
+          "02_Areas/Physics/lessons/measurement_units_and_uncertainty.md",
+          "02_Areas/Physics/curriculum.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-biology-food-chain-en",
+        "lang": "en",
+        "subject": "biology",
+        "ranked": [
+          "02_Areas/Biology/lessons/ecosystem_energy_flow.md",
+          "02_Areas/Biology/lessons/food_webs_and_matter_cycles.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-biology-protein-ru",
+        "lang": "ru",
+        "subject": "biology",
+        "ranked": [
+          "02_Areas/Mathematics/lessons/numbers_fractions_and_percentages.md",
+          "02_Areas/Biology/lessons/gene_expression_and_regulation.md",
+          "02_Areas/Biology/lessons/intro.md"
+        ],
+        "hit_at_1": false,
+        "hit_at_k": true,
+        "reciprocal_rank": 0.5,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-zoology-symmetry-en",
+        "lang": "en",
+        "subject": "zoology",
+        "ranked": [
+          "02_Areas/Zoology/lessons/symmetry_and_body_plans.md",
+          "02_Areas/Mathematics/lessons/geometry_area_perimeter.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-programming-binary-search-ru",
+        "lang": "ru",
+        "subject": "programming",
+        "ranked": [
+          "02_Areas/Programming/lessons/search_and_complexity.md",
+          "02_Areas/Programming/lessons/computational_thinking.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-english-conditional-en",
+        "lang": "en",
+        "subject": "english",
+        "ranked": [
+          "02_Areas/Programming/lessons/variables_and_types.md",
+          "02_Areas/English/lessons/zero_first_second_conditionals.md",
+          "02_Areas/Programming/lessons/conditions_loops_functions.md"
+        ],
+        "hit_at_1": false,
+        "hit_at_k": true,
+        "reciprocal_rank": 0.5,
+        "main_lesson_found": true
+      }
+    ],
+    "semantic": [
+      {
+        "id": "holdout-math-systems-ru",
+        "lang": "ru",
+        "subject": "mathematics",
+        "ranked": [
+          "02_Areas/Mathematics/lessons/systems_of_linear_equations.md",
+          "02_Areas/Mathematics/lessons/solving_linear_equations.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-math-percent-en",
+        "lang": "en",
+        "subject": "mathematics",
+        "ranked": [
+          "02_Areas/Mathematics/lessons/numbers_fractions_and_percentages.md",
+          "02_Areas/Mathematics/lessons/descriptive_statistics_and_potential_outliers.md",
+          "02_Areas/Mathematics/lessons/intro.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-math-parabola-ru",
+        "lang": "ru",
+        "subject": "mathematics",
+        "ranked": [
+          "02_Areas/Mathematics/lessons/quadratic_functions_and_transformations.md",
+          "02_Areas/Mathematics/lessons/functions_as_models.md",
+          "02_Areas/Mathematics/lessons/intro.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-physics-wave-en",
+        "lang": "en",
+        "subject": "physics",
+        "ranked": [
+          "02_Areas/Physics/lessons/oscillations_and_waves.md",
+          "02_Areas/Programming/lessons/collections_and_loops.md",
+          "02_Areas/Programming/lessons/ml_baseline_and_holdout.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-physics-uncertainty-ru",
+        "lang": "ru",
+        "subject": "physics",
+        "ranked": [
+          "02_Areas/Physics/lessons/measurement_units_and_uncertainty.md",
+          "02_Areas/Mathematics/lessons/solving_linear_equations.md",
+          "02_Areas/Programming/lessons/ml_baseline_and_holdout.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-biology-food-chain-en",
+        "lang": "en",
+        "subject": "biology",
+        "ranked": [
+          "02_Areas/Biology/lessons/ecosystem_energy_flow.md",
+          "02_Areas/Biology/lessons/food_webs_and_matter_cycles.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-biology-protein-ru",
+        "lang": "ru",
+        "subject": "biology",
+        "ranked": [
+          "02_Areas/Biology/lessons/gene_expression_and_regulation.md",
+          "02_Areas/Biology/lessons/eukaryotic_cell_organelles.md",
+          "02_Areas/Biology/lessons/biomolecules_and_building_blocks.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-zoology-symmetry-en",
+        "lang": "en",
+        "subject": "zoology",
+        "ranked": [
+          "02_Areas/Zoology/lessons/symmetry_and_body_plans.md",
+          "02_Areas/Biology/lessons/food_webs_and_matter_cycles.md",
+          "02_Areas/Zoology/lessons/comparative_gas_exchange_and_circulation.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-programming-binary-search-ru",
+        "lang": "ru",
+        "subject": "programming",
+        "ranked": [
+          "02_Areas/Programming/lessons/search_and_complexity.md",
+          "02_Areas/Programming/lessons/gradient_descent_and_learning_rate.md",
+          "02_Areas/Programming/lessons/computational_thinking.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-english-conditional-en",
+        "lang": "en",
+        "subject": "english",
+        "ranked": [
+          "02_Areas/English/lessons/subject_pronouns_and_be.md",
+          "02_Areas/English/lessons/reported_speech_questions_and_backshift.md"
+        ],
+        "hit_at_1": false,
+        "hit_at_k": false,
+        "reciprocal_rank": 0.0,
+        "main_lesson_found": false
+      }
+    ],
+    "hybrid": [
+      {
+        "id": "holdout-math-systems-ru",
+        "lang": "ru",
+        "subject": "mathematics",
+        "ranked": [
+          "02_Areas/Mathematics/lessons/systems_of_linear_equations.md",
+          "02_Areas/Mathematics/lessons/solving_linear_equations.md",
+          "02_Areas/Mathematics/curriculum.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-math-percent-en",
+        "lang": "en",
+        "subject": "mathematics",
+        "ranked": [
+          "02_Areas/Mathematics/lessons/numbers_fractions_and_percentages.md",
+          "02_Areas/Programming/lessons/ml_baseline_and_holdout.md",
+          "02_Areas/Mathematics/curriculum.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-math-parabola-ru",
+        "lang": "ru",
+        "subject": "mathematics",
+        "ranked": [
+          "02_Areas/Mathematics/lessons/quadratic_functions_and_transformations.md",
+          "02_Areas/Mathematics/lessons/functions_as_models.md",
+          "02_Areas/Mathematics/lessons/intro.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-physics-wave-en",
+        "lang": "en",
+        "subject": "physics",
+        "ranked": [
+          "02_Areas/Physics/lessons/oscillations_and_waves.md",
+          "02_Areas/Mathematics/lessons/trigonometry_and_periodic_functions.md",
+          "02_Areas/Programming/lessons/collections_and_loops.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-physics-uncertainty-ru",
+        "lang": "ru",
+        "subject": "physics",
+        "ranked": [
+          "02_Areas/Physics/lessons/measurement_units_and_uncertainty.md",
+          "02_Areas/Mathematics/lessons/solving_linear_equations.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-biology-food-chain-en",
+        "lang": "en",
+        "subject": "biology",
+        "ranked": [
+          "02_Areas/Biology/lessons/ecosystem_energy_flow.md",
+          "02_Areas/Biology/lessons/food_webs_and_matter_cycles.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-biology-protein-ru",
+        "lang": "ru",
+        "subject": "biology",
+        "ranked": [
+          "02_Areas/Biology/lessons/gene_expression_and_regulation.md",
+          "02_Areas/Biology/lessons/dna_genes_and_traits.md",
+          "02_Areas/Biology/lessons/eukaryotic_cell_organelles.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-zoology-symmetry-en",
+        "lang": "en",
+        "subject": "zoology",
+        "ranked": [
+          "02_Areas/Zoology/lessons/symmetry_and_body_plans.md",
+          "02_Areas/Zoology/lessons/comparative_gas_exchange_and_circulation.md",
+          "02_Areas/Zoology/lessons/animal_function_and_environment.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-programming-binary-search-ru",
+        "lang": "ru",
+        "subject": "programming",
+        "ranked": [
+          "02_Areas/Programming/lessons/search_and_complexity.md",
+          "02_Areas/Programming/lessons/gradient_descent_and_learning_rate.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      },
+      {
+        "id": "holdout-english-conditional-en",
+        "lang": "en",
+        "subject": "english",
+        "ranked": [
+          "02_Areas/English/lessons/zero_first_second_conditionals.md",
+          "02_Areas/English/lessons/reported_speech_questions_and_backshift.md",
+          "02_Areas/English/lessons/subject_pronouns_and_be.md"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "reciprocal_rank": 1.0,
+        "main_lesson_found": true
+      }
+    ]
+  }
+}

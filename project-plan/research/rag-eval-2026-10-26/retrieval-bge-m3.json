@@ -3,24 +3,24 @@
   "fusion": {
     "_RRF_K": 60,
     "_LEXICAL_WEIGHT": 1.0,
-    "_SEMANTIC_WEIGHT": 1.0,
+    "_SEMANTIC_WEIGHT": 3.0,
     "_FUSION_CANDIDATES": null
   },
   "document_count": 80,
   "top_k": 4,
-  "warmup_seconds": 131.09726466600114,
+  "warmup_seconds": 0.5442308749989024,
   "median_query_seconds": {
-    "lexical": 0.21090270850254456,
-    "semantic": 0.3659665000013774,
-    "hybrid": 0.39607545849867165
+    "lexical": 0.09084437449928373,
+    "semantic": 0.19576379150385037,
+    "hybrid": 0.1949530624988256
   },
   "summary": {
     "lexical": {
       "questions": 20,
       "hit_at_1": 0.55,
-      "hit_at_4": 0.65,
-      "mrr": 0.6,
-      "main_lesson_found": 0.65
+      "hit_at_4": 0.75,
+      "mrr": 0.65,
+      "main_lesson_found": 0.75
     },
     "semantic": {
       "questions": 20,
@@ -31,10 +31,10 @@
     },
     "hybrid": {
       "questions": 20,
-      "hit_at_1": 0.75,
-      "hit_at_4": 0.9,
-      "mrr": 0.8083333333333333,
-      "main_lesson_found": 0.9
+      "hit_at_1": 0.9,
+      "hit_at_4": 1.0,
+      "mrr": 0.9416666666666667,
+      "main_lesson_found": 1.0
     }
   },
   "by_language": {
@@ -42,16 +42,16 @@
       "en": {
         "questions": 10,
         "hit_at_1": 0.4,
-        "hit_at_4": 0.6,
-        "mrr": 0.5,
-        "main_lesson_found": 0.6
+        "hit_at_4": 0.7,
+        "mrr": 0.55,
+        "main_lesson_found": 0.7
       },
       "ru": {
         "questions": 10,
         "hit_at_1": 0.7,
-        "hit_at_4": 0.7,
-        "mrr": 0.7,
-        "main_lesson_found": 0.7
+        "hit_at_4": 0.8,
+        "mrr": 0.75,
+        "main_lesson_found": 0.8
       }
     },
     "semantic": {
@@ -73,17 +73,17 @@
     "hybrid": {
       "en": {
         "questions": 10,
-        "hit_at_1": 0.8,
-        "hit_at_4": 0.9,
-        "mrr": 0.85,
-        "main_lesson_found": 0.9
+        "hit_at_1": 0.9,
+        "hit_at_4": 1.0,
+        "mrr": 0.95,
+        "main_lesson_found": 1.0
       },
       "ru": {
         "questions": 10,
-        "hit_at_1": 0.7,
-        "hit_at_4": 0.9,
-        "mrr": 0.7666666666666667,
-        "main_lesson_found": 0.9
+        "hit_at_1": 0.9,
+        "hit_at_4": 1.0,
+        "mrr": 0.9333333333333333,
+        "main_lesson_found": 1.0
       }
     }
   },
@@ -95,8 +95,7 @@
         "subject": "mathematics",
         "ranked": [
           "02_Areas/Mathematics/lessons/functions_as_models.md",
-          "02_Areas/English/lessons/reading_for_gist_and_detail.md",
-          "02_Areas/Mathematics/lessons/quadratic_functions_and_transformations.md"
+          "02_Areas/English/lessons/reading_for_gist_and_detail.md"
         ],
         "hit_at_1": false,
         "hit_at_k": false,
@@ -122,8 +121,8 @@
         "lang": "en",
         "subject": "mathematics",
         "ranked": [
-          "02_Areas/Mathematics/lessons/quadratic_functions_and_transformations.md",
           "02_Areas/Physics/lessons/impulse_and_momentum.md",
+          "02_Areas/Mathematics/lessons/quadratic_functions_and_transformations.md",
           "02_Areas/Mathematics/lessons/trigonometry_and_periodic_functions.md"
         ],
         "hit_at_1": false,
@@ -150,8 +149,7 @@
         "subject": "physics",
         "ranked": [
           "02_Areas/Physics/lessons/projectile_motion.md",
-          "02_Areas/Zoology/lessons/animals_as_a_group.md",
-          "02_Areas/Programming/lessons/computational_thinking.md"
+          "02_Areas/Physics/lessons/vectors_and_kinematics.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -164,8 +162,7 @@
         "subject": "physics",
         "ranked": [
           "02_Areas/Physics/lessons/temperature_and_heat.md",
-          "02_Areas/Biology/lessons/ecosystem_energy_flow.md",
-          "02_Areas/Mathematics/lessons/numbers_fractions_and_percentages.md"
+          "02_Areas/Biology/lessons/ecosystem_energy_flow.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -178,8 +175,7 @@
         "subject": "physics",
         "ranked": [
           "02_Areas/English/lessons/reading_for_gist_and_detail.md",
-          "02_Areas/Physics/lessons/static_and_kinetic_friction.md",
-          "02_Areas/Mathematics/lessons/solving_linear_equations.md"
+          "02_Areas/Physics/lessons/static_and_kinetic_friction.md"
         ],
         "hit_at_1": false,
         "hit_at_k": true,
@@ -192,8 +188,8 @@
         "subject": "physics",
         "ranked": [
           "02_Areas/Physics/lessons/work_and_kinetic_energy.md",
-          "02_Areas/Biology/lessons/ecosystem_energy_flow.md",
-          "02_Areas/Biology/lessons/photosynthesis_energy_and_carbon.md"
+          "02_Areas/Biology/lessons/photosynthesis_energy_and_carbon.md",
+          "02_Areas/Biology/lessons/ecosystem_energy_flow.md"
         ],
         "hit_at_1": false,
         "hit_at_k": false,
@@ -207,8 +203,7 @@
         "ranked": [
           "02_Areas/Biology/lessons/photosynthesis_energy_and_carbon.md",
           "02_Areas/Zoology/lessons/animals_as_a_group.md",
-          "02_Areas/Zoology/lessons/comparative_thermoregulation_and_heat_stress.md",
-          "02_Areas/Physics/lessons/temperature_and_heat.md"
+          "02_Areas/Zoology/lessons/comparative_thermoregulation_and_heat_stress.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -234,8 +229,7 @@
         "subject": "biology",
         "ranked": [
           "02_Areas/Biology/lessons/passive_transport_osmosis.md",
-          "02_Areas/Biology/lessons/cell_cycle_and_differentiation.md",
-          "02_Areas/Biology/lessons/eukaryotic_cell_organelles.md"
+          "02_Areas/Biology/lessons/cell_cycle_and_differentiation.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -247,13 +241,12 @@
         "lang": "en",
         "subject": "biology",
         "ranked": [
-          "02_Areas/Biology/lessons/dna_genes_and_traits.md",
           "02_Areas/Biology/lessons/mendelian_inheritance.md",
-          "02_Areas/Zoology/lessons/adaptation_and_behavior.md"
+          "02_Areas/Biology/lessons/dna_genes_and_traits.md"
         ],
-        "hit_at_1": false,
+        "hit_at_1": true,
         "hit_at_k": true,
-        "reciprocal_rank": 0.5,
+        "reciprocal_rank": 1.0,
         "main_lesson_found": true
       },
       {
@@ -263,7 +256,7 @@
         "ranked": [
           "02_Areas/Zoology/lessons/intro.md",
           "02_Areas/Biology/lessons/photosynthesis_energy_and_carbon.md",
-          "02_Areas/English/lessons/present_perfect_simple_continuous.md"
+          "02_Areas/Mathematics/lessons/descriptive_statistics_and_potential_outliers.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -276,7 +269,6 @@
         "subject": "zoology",
         "ranked": [
           "02_Areas/Zoology/lessons/comparative_gas_exchange_and_circulation.md",
-          "02_Areas/Programming/lessons/collections_and_loops.md",
           "02_Areas/Biology/lessons/food_webs_and_matter_cycles.md"
         ],
         "hit_at_1": true,
@@ -290,13 +282,12 @@
         "subject": "programming",
         "ranked": [
           "02_Areas/Programming/lessons/computational_thinking.md",
-          "02_Areas/Syntax_and_OOP/README.md",
-          "02_Areas/English/lessons/intro.md"
+          "02_Areas/Programming/lessons/collections_and_loops.md"
         ],
         "hit_at_1": false,
-        "hit_at_k": false,
-        "reciprocal_rank": 0.0,
-        "main_lesson_found": false
+        "hit_at_k": true,
+        "reciprocal_rank": 0.5,
+        "main_lesson_found": true
       },
       {
         "id": "programming-learning-rate-ru",
@@ -304,8 +295,8 @@
         "subject": "programming",
         "ranked": [
           "02_Areas/Programming/lessons/gradient_descent_and_learning_rate.md",
-          "02_Areas/Mathematics/lessons/rates_of_change_and_derivative.md",
-          "02_Areas/Mathematics/lessons/functions_as_models.md"
+          "02_Areas/Programming/lessons/ml_baseline_and_holdout.md",
+          "02_Areas/Biology/lessons/synapses_and_signal_summation.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -317,12 +308,12 @@
         "lang": "en",
         "subject": "programming",
         "ranked": [
-          "02_Areas/Programming/lessons/ml_baseline_and_holdout.md",
-          "02_Areas/Programming/lessons/variables_and_types.md"
+          "02_Areas/Programming/lessons/variables_and_types.md",
+          "02_Areas/Programming/lessons/ml_baseline_and_holdout.md"
         ],
-        "hit_at_1": true,
+        "hit_at_1": false,
         "hit_at_k": true,
-        "reciprocal_rank": 1.0,
+        "reciprocal_rank": 0.5,
         "main_lesson_found": true
       },
       {
@@ -344,8 +335,8 @@
         "subject": "english",
         "ranked": [
           "02_Areas/English/lessons/present_perfect_simple_continuous.md",
-          "02_Areas/English/curriculum.md",
-          "02_Areas/English/lessons/intro.md"
+          "02_Areas/English/lessons/intro.md",
+          "02_Areas/English/curriculum.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -358,12 +349,13 @@
         "subject": "english",
         "ranked": [
           "02_Areas/English/lessons/short_message_to_a_friend.md",
+          "02_Areas/English/lessons/reported_speech_questions_and_backshift.md",
           "02_Areas/English/lessons/intro.md"
         ],
         "hit_at_1": false,
-        "hit_at_k": false,
-        "reciprocal_rank": 0.0,
-        "main_lesson_found": false
+        "hit_at_k": true,
+        "reciprocal_rank": 0.5,
+        "main_lesson_found": true
       }
     ],
     "semantic": [
@@ -644,13 +636,13 @@
         "subject": "mathematics",
         "ranked": [
           "02_Areas/Mathematics/lessons/functions_as_models.md",
-          "02_Areas/Mathematics/lessons/quadratic_functions_and_transformations.md",
-          "02_Areas/Programming/lessons/conditions_loops_functions.md"
+          "02_Areas/Mathematics/lessons/rational_expressions_and_restrictions.md",
+          "02_Areas/Mathematics/lessons/domain_and_range.md"
         ],
         "hit_at_1": false,
-        "hit_at_k": false,
-        "reciprocal_rank": 0.0,
-        "main_lesson_found": false
+        "hit_at_k": true,
+        "reciprocal_rank": 0.3333333333333333,
+        "main_lesson_found": true
       },
       {
         "id": "math-rational-ru",
@@ -672,7 +664,7 @@
         "ranked": [
           "02_Areas/Mathematics/lessons/rates_of_change_and_derivative.md",
           "02_Areas/Physics/lessons/impulse_and_momentum.md",
-          "02_Areas/Mathematics/lessons/quadratic_functions_and_transformations.md"
+          "02_Areas/Physics/lessons/motion_with_constant_acceleration.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -685,13 +677,13 @@
         "subject": "mathematics",
         "ranked": [
           "02_Areas/Programming/lessons/conditions_loops_functions.md",
-          "02_Areas/Programming/lessons/computational_thinking.md",
-          "02_Areas/Programming/lessons/variables_and_types.md"
+          "02_Areas/Mathematics/lessons/constrained_optimization_and_lagrange_multipliers.md",
+          "02_Areas/Programming/lessons/computational_thinking.md"
         ],
         "hit_at_1": false,
-        "hit_at_k": false,
-        "reciprocal_rank": 0.0,
-        "main_lesson_found": false
+        "hit_at_k": true,
+        "reciprocal_rank": 0.5,
+        "main_lesson_found": true
       },
       {
         "id": "physics-projectile-ru",
@@ -699,8 +691,8 @@
         "subject": "physics",
         "ranked": [
           "02_Areas/Physics/lessons/projectile_motion.md",
-          "02_Areas/Mathematics/lessons/trigonometry_and_periodic_functions.md",
-          "02_Areas/Physics/lessons/vectors_and_kinematics.md"
+          "02_Areas/Physics/lessons/vectors_and_kinematics.md",
+          "02_Areas/Mathematics/lessons/trigonometry_and_periodic_functions.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -726,8 +718,7 @@
         "subject": "physics",
         "ranked": [
           "02_Areas/Physics/lessons/static_and_kinetic_friction.md",
-          "02_Areas/Biology/lessons/passive_transport_osmosis.md",
-          "02_Areas/Zoology/lessons/animal_function_and_environment.md"
+          "02_Areas/Biology/lessons/passive_transport_osmosis.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -739,13 +730,12 @@
         "lang": "en",
         "subject": "physics",
         "ranked": [
-          "02_Areas/Physics/lessons/work_and_kinetic_energy.md",
-          "02_Areas/Physics/lessons/impulse_and_momentum.md",
-          "02_Areas/Physics/lessons/elastic_collisions.md"
+          "02_Areas/Physics/lessons/elastic_collisions.md",
+          "02_Areas/Physics/lessons/impulse_and_momentum.md"
         ],
-        "hit_at_1": false,
+        "hit_at_1": true,
         "hit_at_k": true,
-        "reciprocal_rank": 0.5,
+        "reciprocal_rank": 1.0,
         "main_lesson_found": true
       },
       {
@@ -767,13 +757,12 @@
         "lang": "ru",
         "subject": "biology",
         "ranked": [
-          "02_Areas/Biology/lessons/eukaryotic_cell_organelles.md",
-          "02_Areas/Biology/lessons/intro.md",
-          "02_Areas/Biology/lessons/neurons_and_action_potentials.md"
+          "02_Areas/Biology/lessons/neurons_and_action_potentials.md",
+          "02_Areas/Biology/lessons/synapses_and_signal_summation.md"
         ],
-        "hit_at_1": false,
+        "hit_at_1": true,
         "hit_at_k": true,
-        "reciprocal_rank": 0.3333333333333333,
+        "reciprocal_rank": 1.0,
         "main_lesson_found": true
       },
       {
@@ -782,7 +771,8 @@
         "subject": "biology",
         "ranked": [
           "02_Areas/Biology/lessons/passive_transport_osmosis.md",
-          "02_Areas/Biology/lessons/cell_cycle_and_differentiation.md"
+          "02_Areas/Biology/lessons/cell_cycle_and_differentiation.md",
+          "02_Areas/Zoology/lessons/comparative_gas_exchange_and_circulation.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -795,6 +785,7 @@
         "subject": "biology",
         "ranked": [
           "02_Areas/Biology/lessons/mendelian_inheritance.md",
+          "02_Areas/Zoology/lessons/adaptation_and_behavior.md",
           "02_Areas/Biology/lessons/dna_genes_and_traits.md"
         ],
         "hit_at_1": true,
@@ -808,8 +799,8 @@
         "subject": "zoology",
         "ranked": [
           "02_Areas/Zoology/lessons/intro.md",
-          "02_Areas/Biology/lessons/photosynthesis_energy_and_carbon.md",
-          "02_Areas/Physics/lessons/impulse_and_momentum.md"
+          "02_Areas/Programming/lessons/intro.md",
+          "02_Areas/Zoology/lessons/comparative_thermoregulation_and_heat_stress.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -835,13 +826,13 @@
         "lang": "ru",
         "subject": "programming",
         "ranked": [
+          "02_Areas/Programming/lessons/collections_and_loops.md",
           "02_Areas/Programming/lessons/computational_thinking.md",
-          "02_Areas/Programming/lessons/search_and_complexity.md",
-          "02_Areas/Programming/lessons/collections_and_loops.md"
+          "02_Areas/Programming/lessons/search_and_complexity.md"
         ],
-        "hit_at_1": false,
+        "hit_at_1": true,
         "hit_at_k": true,
-        "reciprocal_rank": 0.3333333333333333,
+        "reciprocal_rank": 1.0,
         "main_lesson_found": true
       },
       {
@@ -863,8 +854,8 @@
         "subject": "programming",
         "ranked": [
           "02_Areas/Programming/lessons/ml_baseline_and_holdout.md",
-          "02_Areas/Programming/lessons/variables_and_types.md",
-          "02_Areas/Mathematics/lessons/systems_of_linear_equations.md"
+          "02_Areas/Programming/lessons/gradient_descent_and_learning_rate.md",
+          "02_Areas/Programming/lessons/variables_and_types.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -877,7 +868,8 @@
         "subject": "programming",
         "ranked": [
           "02_Areas/Programming/lessons/sql_transactions.md",
-          "02_Areas/Biology/lessons/ecosystem_energy_flow.md"
+          "02_Areas/Programming/lessons/search_and_complexity.md",
+          "02_Areas/Programming/lessons/computational_thinking.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -890,8 +882,7 @@
         "subject": "english",
         "ranked": [
           "02_Areas/English/lessons/present_perfect_simple_continuous.md",
-          "02_Areas/English/lessons/intro.md",
-          "02_Areas/English/curriculum.md"
+          "02_Areas/English/lessons/intro.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,
@@ -904,7 +895,8 @@
         "subject": "english",
         "ranked": [
           "02_Areas/English/lessons/reported_speech_questions_and_backshift.md",
-          "02_Areas/English/lessons/short_message_to_a_friend.md"
+          "02_Areas/English/lessons/short_message_to_a_friend.md",
+          "02_Areas/English/lessons/present_simple_and_continuous.md"
         ],
         "hit_at_1": true,
         "hit_at_k": true,

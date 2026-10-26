@@ -51,11 +51,13 @@ _REFERENCE_DOCUMENT_TOKENS = 1024
 # question beats one paragraph that merely repeats its words.
 _DOCUMENT_SCORE_WEIGHT = 1.0
 _MIN_SEMANTIC_SIMILARITY = 0.25
-# Reciprocal-rank fusion of the keyword and vector rankings. Tuned on
-# rag_eval_questions.json; see project-plan/research/.
+# Reciprocal-rank fusion of the keyword and vector rankings. With equal weights
+# a chunk sharing one incidental word outranked the best meaning match; weight 3
+# for vectors was tuned on rag_eval_questions.json and confirmed on the holdout
+# set (project-plan/research/rag-semantic-search-and-tutor-model-2026-10-26.md).
 _RRF_K = 60
 _LEXICAL_WEIGHT = 1.0
-_SEMANTIC_WEIGHT = 1.0
+_SEMANTIC_WEIGHT = 3.0
 _FUSION_CANDIDATES: int | None = None
 _EMBEDDING_BATCH_SIZE = 16
 # A question may embed one small batch inline (for example, a short edited

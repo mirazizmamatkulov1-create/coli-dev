@@ -3072,6 +3072,19 @@ private struct DerivativeRateLab: View {
 private struct ConstrainedOptimizationLab: View {
     @EnvironmentObject private var store: LearningStore
     @State private var angleRadians = Double.pi / 8
+    @State private var showsSurface = false
+
+    private var gradientAngleDegrees: Double? {
+        LagrangeSurfaceModel.gradientAngleDegrees(x: point.x, y: point.y)
+    }
+
+    private var surfaceAccessibilityValue: String {
+        let angle = gradientAngleDegrees.map { String(format: "%.0f°", $0) } ?? "—"
+        return String(
+            format: L10n.text("lab.optimization.surfaceValue", store.language),
+            point.x, point.y, point.objective, angle
+        )
+    }
 
     private var point: ConstrainedOptimizationPoint {
         ConstrainedOptimizationPoint(angleRadians: angleRadians) ??
@@ -3096,70 +3109,104 @@ private struct ConstrainedOptimizationLab: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            GeometryReader { geometry in
-                Canvas { context, size in
-                    guard size.width > 0, size.height > 0 else { return }
-                    let center = CGPoint(x: size.width / 2, y: size.height / 2)
-                    let radius = min(size.width, size.height) * 0.37
-                    func location(_ x: Double, _ y: Double) -> CGPoint {
-                        CGPoint(
-                            x: center.x + CGFloat(x) * radius,
-                            y: center.y - CGFloat(y) * radius
-                        )
-                    }
-
-                    var axes = Path()
-                    axes.move(to: location(-1.18, 0))
-                    axes.addLine(to: location(1.18, 0))
-                    axes.move(to: location(0, -1.18))
-                    axes.addLine(to: location(0, 1.18))
-                    context.stroke(axes, with: .color(.secondary.opacity(0.55)), lineWidth: 1.25)
-
-                    var diagonals = Path()
-                    diagonals.move(to: location(-1.1, -1.1))
-                    diagonals.addLine(to: location(1.1, 1.1))
-                    diagonals.move(to: location(-1.1, 1.1))
-                    diagonals.addLine(to: location(1.1, -1.1))
-                    context.stroke(
-                        diagonals,
-                        with: .color(.orange.opacity(0.58)),
-                        style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])
-                    )
-
-                    var circle = Path()
-                    for index in 0...180 {
-                        let theta = Double(index) / 180 * 2 * Double.pi
-                        let p = location(cos(theta), sin(theta))
-                        if index == 0 { circle.move(to: p) } else { circle.addLine(to: p) }
-                    }
-                    context.stroke(circle, with: .color(.indigo), lineWidth: 3)
-
-                    let stationaryAngles: [Double] = [45, 135, 225, 315]
-                    for degrees in stationaryAngles {
-                        let theta = degrees * Double.pi / 180
-                        let p = location(cos(theta), sin(theta))
-                        let marker = CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)
-                        context.fill(Path(ellipseIn: marker), with: .color(.green))
-                    }
-
-                    let selected = location(point.x, point.y)
-                    let selection = CGRect(x: selected.x - 7, y: selected.y - 7, width: 14, height: 14)
-                    context.fill(Path(ellipseIn: selection), with: .color(Color.accentColor))
-                    context.stroke(Path(ellipseIn: selection), with: .color(.white), lineWidth: 1.5)
-                }
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
-                            var angle = atan2(center.y - value.location.y, value.location.x - center.x)
-                            if angle < 0 { angle += 2 * Double.pi }
-                            if angle.isFinite { angleRadians = angle }
-                        }
-                )
+            Picker(L10n.text("lab.optimization.viewMode", store.language), selection: $showsSurface) {
+                Text(L10n.text("lab.optimization.view2D", store.language)).tag(false)
+                Text(L10n.text("lab.optimization.view3D", store.language)).tag(true)
             }
-            .frame(height: 250)
-            .accessibilityLabel(L10n.text("lab.optimization.graph", store.language))
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("lab.optimization.viewMode")
+
+            if showsSurface {
+                ConstrainedOptimizationSurfaceView(
+                    x: point.x,
+                    y: point.y,
+                    accessibilityLabel: L10n.text("lab.optimization.surfaceLabel", store.language),
+                    accessibilityValue: surfaceAccessibilityValue
+                )
+                .frame(height: 340)
+                .accessibilityIdentifier("lab.optimization.surface")
+
+                Text(L10n.text("lab.optimization.surfaceHint", store.language))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                HStack(spacing: 14) {
+                    Label(L10n.text("lab.optimization.legendGradF", store.language), systemImage: "arrow.up.right")
+                        .foregroundStyle(.orange)
+                    Label(L10n.text("lab.optimization.legendGradG", store.language), systemImage: "arrow.up.right")
+                        .foregroundStyle(.purple)
+                    Label(L10n.text("lab.optimization.legendExtrema", store.language), systemImage: "circle.fill")
+                        .foregroundStyle(.green)
+                }
+                .font(.caption)
+                .labelStyle(.titleAndIcon)
+            } else {
+                GeometryReader { geometry in
+                    Canvas { context, size in
+                        guard size.width > 0, size.height > 0 else { return }
+                        let center = CGPoint(x: size.width / 2, y: size.height / 2)
+                        let radius = min(size.width, size.height) * 0.37
+                        func location(_ x: Double, _ y: Double) -> CGPoint {
+                            CGPoint(
+                                x: center.x + CGFloat(x) * radius,
+                                y: center.y - CGFloat(y) * radius
+                            )
+                        }
+
+                        var axes = Path()
+                        axes.move(to: location(-1.18, 0))
+                        axes.addLine(to: location(1.18, 0))
+                        axes.move(to: location(0, -1.18))
+                        axes.addLine(to: location(0, 1.18))
+                        context.stroke(axes, with: .color(.secondary.opacity(0.55)), lineWidth: 1.25)
+
+                        var diagonals = Path()
+                        diagonals.move(to: location(-1.1, -1.1))
+                        diagonals.addLine(to: location(1.1, 1.1))
+                        diagonals.move(to: location(-1.1, 1.1))
+                        diagonals.addLine(to: location(1.1, -1.1))
+                        context.stroke(
+                            diagonals,
+                            with: .color(.orange.opacity(0.58)),
+                            style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])
+                        )
+
+                        var circle = Path()
+                        for index in 0...180 {
+                            let theta = Double(index) / 180 * 2 * Double.pi
+                            let p = location(cos(theta), sin(theta))
+                            if index == 0 { circle.move(to: p) } else { circle.addLine(to: p) }
+                        }
+                        context.stroke(circle, with: .color(.indigo), lineWidth: 3)
+
+                        let stationaryAngles: [Double] = [45, 135, 225, 315]
+                        for degrees in stationaryAngles {
+                            let theta = degrees * Double.pi / 180
+                            let p = location(cos(theta), sin(theta))
+                            let marker = CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)
+                            context.fill(Path(ellipseIn: marker), with: .color(.green))
+                        }
+
+                        let selected = location(point.x, point.y)
+                        let selection = CGRect(x: selected.x - 7, y: selected.y - 7, width: 14, height: 14)
+                        context.fill(Path(ellipseIn: selection), with: .color(Color.accentColor))
+                        context.stroke(Path(ellipseIn: selection), with: .color(.white), lineWidth: 1.5)
+                    }
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                                var angle = atan2(center.y - value.location.y, value.location.x - center.x)
+                                if angle < 0 { angle += 2 * Double.pi }
+                                if angle.isFinite { angleRadians = angle }
+                            }
+                    )
+                }
+                .frame(height: 250)
+                .accessibilityLabel(L10n.text("lab.optimization.graph", store.language))
+            }
 
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
@@ -3176,21 +3223,26 @@ private struct ConstrainedOptimizationLab: View {
                     .accessibilityLabel(Text(L10n.text("lab.optimization.angle", store.language)))
             }
 
-            HStack(spacing: 14) {
-                Label(L10n.text("lab.optimization.constraint", store.language), systemImage: "circle")
-                    .foregroundStyle(.indigo)
-                Label(L10n.text("lab.optimization.candidates", store.language), systemImage: "line.diagonal")
-                    .foregroundStyle(.orange)
-                Label(L10n.text("lab.optimization.selected", store.language), systemImage: "smallcircle.filled.circle")
-                    .foregroundStyle(Color.accentColor)
+            if !showsSurface {
+                HStack(spacing: 14) {
+                    Label(L10n.text("lab.optimization.constraint", store.language), systemImage: "circle")
+                        .foregroundStyle(.indigo)
+                    Label(L10n.text("lab.optimization.candidates", store.language), systemImage: "line.diagonal")
+                        .foregroundStyle(.orange)
+                    Label(L10n.text("lab.optimization.selected", store.language), systemImage: "smallcircle.filled.circle")
+                        .foregroundStyle(Color.accentColor)
+                }
+                .font(.caption)
+                .labelStyle(.titleAndIcon)
             }
-            .font(.caption)
-            .labelStyle(.titleAndIcon)
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(String(format: L10n.text("lab.optimization.point", store.language), point.x, point.y))
                 Text(String(format: L10n.text("lab.optimization.objective", store.language), point.objective))
                 Text(String(format: L10n.text("lab.optimization.derivative", store.language), point.tangentDerivative))
+                if let gradientAngleDegrees {
+                    Text(String(format: L10n.text("lab.optimization.gradientAngle", store.language), gradientAngleDegrees))
+                }
                 Text(L10n.text(statusKey, store.language))
                     .fontWeight(.semibold)
                     .foregroundStyle(point.isStationary ? Color.green : Color.secondary)

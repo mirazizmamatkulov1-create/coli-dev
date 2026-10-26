@@ -55,7 +55,7 @@ def test_keyword_only_retrieval_baseline_runs_offline() -> None:
     summary = report["summary"]["lexical"]
     assert set(report["summary"]) == {"lexical"}
     assert summary["questions"] == len(rag_eval.load_questions())
-    # Keyword search found 13 of 20 lessons in the 2026-10-26 run; a large drop
+    # Keyword search found 15 of 20 lessons in the 2026-10-26 run; a large drop
     # means tokenisation or ranking regressed.
     assert summary["hit_at_4"] >= 0.5
 

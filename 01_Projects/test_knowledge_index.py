@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import random
 import re
+import shutil
 import sqlite3
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -334,7 +336,7 @@ def test_priority_curriculum_roadmaps_are_retrievable(
     )
 
 
-@pytest.mark.parametrize(("query", "expected_path"), [
+_BILINGUAL_MODULE_QUERIES = [
     (
         "linear function model taxi starting charge slope kilometres fare traffic waiting",
         "Mathematics/lessons/functions_as_models.md",
@@ -399,7 +401,10 @@ def test_priority_curriculum_roadmaps_are_retrievable(
         "count_even number modulo two return count list empty list",
         "Programming/lessons/conditions_loops_functions.md",
     ),
-])
+]
+
+
+@pytest.mark.parametrize(("query", "expected_path"), _BILINGUAL_MODULE_QUERIES)
 def test_bilingual_lesson_modules_are_retrievable(
     tmp_path: Path, query: str, expected_path: str
 ) -> None:
@@ -414,6 +419,46 @@ def test_bilingual_lesson_modules_are_retrievable(
     expected_source_checked = _source_checked_date(lesson.read_text(encoding="utf-8"))
     assert results[0]["source_checked_at"] == expected_source_checked
     assert "source_checked" not in results[0]["excerpt"]
+
+
+def _grow_course_corpus(project: Path) -> None:
+    """Add long neutral lessons and lengthen every mathematics lesson."""
+    rnd = random.Random(2026)
+    vocabulary = [f"filler{i}" for i in range(300)] + [f"наполнитель{i}" for i in range(300)]
+
+    def paragraph() -> str:
+        return " ".join(rnd.choice(vocabulary) for _ in range(170))
+
+    synthetic = project / "02_Areas" / "Synthetic"
+    synthetic.mkdir()
+    for number in range(30):
+        sections = "\n\n".join(f"## Filler part {part}\n\n{paragraph()}" for part in range(10))
+        (synthetic / f"filler_{number:02d}.md").write_text(
+            f"# Filler {number}\n\n{sections}\n", encoding="utf-8"
+        )
+    for lesson in sorted((project / "02_Areas" / "Mathematics" / "lessons").glob("*.md")):
+        lesson.write_text(
+            lesson.read_text(encoding="utf-8") + f"\n\n## Filler appendix\n\n{paragraph()}\n",
+            encoding="utf-8",
+        )
+
+
+def test_lesson_ranking_is_stable_when_the_corpus_grows(tmp_path: Path) -> None:
+    """Longer lessons in one subject must not reorder another subject's results."""
+    project = tmp_path / "project"
+    shutil.copytree(Path(__file__).resolve().parent.parent / "02_Areas", project / "02_Areas")
+    _grow_course_corpus(project)
+    index = KnowledgeIndex(project, tmp_path / "knowledge.sqlite3")
+    assert index.refresh_sources()["document_count"] >= 110
+
+    misplaced = {
+        query: results[0]["path"] if results else None
+        for query, expected_path in _BILINGUAL_MODULE_QUERIES
+        if not (results := index.refresh_and_search(query, limit=4))
+        or results[0]["path"] != f"02_Areas/{expected_path}"
+    }
+
+    assert misplaced == {}
 
 
 def test_bundled_english_lesson_rag_returns_its_official_primary_source(tmp_path: Path) -> None:

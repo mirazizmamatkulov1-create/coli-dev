@@ -19,6 +19,7 @@ import threading
 import time
 from array import array
 from collections import Counter
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Protocol
@@ -40,6 +41,15 @@ _MAX_FILE_BYTES = 512 * 1024
 _MAX_DOCUMENTS = 2000
 _MAX_TOTAL_BYTES = 64 * 1024 * 1024
 _MAX_RESULTS_PER_DOCUMENT = 2
+# Keyword scoring normalises length against fixed reference lengths, close to
+# the course averages in October 2026, rather than the live corpus average:
+# lengthening lessons in one subject must not flip close rankings elsewhere.
+_REFERENCE_CHUNK_TOKENS = 64
+_REFERENCE_DOCUMENT_TOKENS = 1024
+# A passage ranks by its own keyword match plus its whole lesson's match, each
+# scaled to the best score for the question, so a lesson that is about the
+# question beats one paragraph that merely repeats its words.
+_DOCUMENT_SCORE_WEIGHT = 1.0
 _MIN_SEMANTIC_SIMILARITY = 0.25
 # Reciprocal-rank fusion of the keyword and vector rankings. Tuned on
 # rag_eval_questions.json; see project-plan/research/.
@@ -162,6 +172,51 @@ def _split_markdown(
         last_line = indexed_lines[-1][0]
         chunks.append((first_line, last_line, fallback_heading, body_text[:_CHUNK_CHARS]))
     return chunks
+
+
+@dataclass
+class _DocumentTerms:
+    frequencies: Counter[str]
+    length: int
+    title: set[str]
+    path: set[str]
+
+
+def _inverse_frequency(count: int, frequency: int) -> float:
+    return math.log(1 + (count - frequency + 0.5) / (frequency + 0.5))
+
+
+def _saturated_frequency(term_frequency: int, length: int, reference_length: int) -> float:
+    """BM25 term weight (k1 = 1.2, b = 0.75) against a fixed reference length."""
+    return term_frequency * 2.2 / (term_frequency + 1.2 * (0.25 + 0.75 * length / reference_length))
+
+
+def _document_scores(documents: dict[str, _DocumentTerms], query_terms: set[str]) -> dict[str, float]:
+    """Score whole lessons, so passages from a lesson about the question rank higher."""
+    document_frequency: Counter[str] = Counter()
+    for document in documents.values():
+        document_frequency.update(set(document.frequencies) | document.title | document.path)
+    count = len(documents)
+    scores: dict[str, float] = {}
+    for path, document in documents.items():
+        score = 0.0
+        for term in query_terms:
+            term_frequency = document.frequencies[term]
+            in_title = term in document.title
+            if not term_frequency and not in_title:
+                continue
+            inverse_frequency = _inverse_frequency(count, document_frequency[term])
+            if term_frequency:
+                score += inverse_frequency * _saturated_frequency(
+                    term_frequency, document.length, _REFERENCE_DOCUMENT_TOKENS
+                )
+            if in_title:
+                score += inverse_frequency * 1.5
+            if term in document.path:
+                score += inverse_frequency * 0.5
+        if score > 0:
+            scores[path] = score
+    return scores
 
 
 class OllamaEmbeddingProvider:
@@ -795,7 +850,7 @@ class KnowledgeIndex:
 
         parsed: list[tuple[sqlite3.Row, list[str], Counter[str], set[str], set[str], set[str]]] = []
         document_frequency: Counter[str] = Counter()
-        total_length = 0
+        documents: dict[str, _DocumentTerms] = {}
         for row in rows:
             body_tokens = _expanded_tokens(_tokens(row["text"]))
             heading_tokens = set(_expanded_tokens(_tokens(row["heading"])))
@@ -804,11 +859,15 @@ class KnowledgeIndex:
             frequencies = Counter(body_tokens + list(heading_tokens) + list(title_tokens) + list(path_tokens))
             terms = set(frequencies)
             document_frequency.update(terms)
-            total_length += max(1, len(body_tokens))
             parsed.append((row, body_tokens, frequencies, heading_tokens, title_tokens, path_tokens))
+            document = documents.setdefault(
+                row["path"], _DocumentTerms(Counter(), 0, title_tokens, path_tokens)
+            )
+            document.frequencies.update(body_tokens)
+            document.frequencies.update(heading_tokens)
+            document.length += max(1, len(body_tokens))
 
         count = len(parsed)
-        average_length = max(1.0, total_length / count)
         lexical_ranked: list[tuple[float, sqlite3.Row]] = []
         for row, body_tokens, frequencies, heading_tokens, title_tokens, path_tokens in parsed:
             length = max(1, len(body_tokens))
@@ -817,9 +876,10 @@ class KnowledgeIndex:
                 term_frequency = frequencies[term]
                 if not term_frequency:
                     continue
-                inverse_frequency = math.log(1 + (count - document_frequency[term] + 0.5) / (document_frequency[term] + 0.5))
-                denominator = term_frequency + 1.2 * (0.25 + 0.75 * length / average_length)
-                score += inverse_frequency * (term_frequency * 2.2 / denominator)
+                inverse_frequency = _inverse_frequency(count, document_frequency[term])
+                score += inverse_frequency * _saturated_frequency(
+                    term_frequency, length, _REFERENCE_CHUNK_TOKENS
+                )
                 if term in heading_tokens:
                     score += inverse_frequency * 1.25
                 if term in title_tokens:
@@ -828,6 +888,19 @@ class KnowledgeIndex:
                     score += inverse_frequency * 0.5
             if score > 0:
                 lexical_ranked.append((score, row))
+
+        document_scores = _document_scores(documents, query_terms)
+        if lexical_ranked and document_scores:
+            best_chunk = max(score for score, _ in lexical_ranked)
+            best_document = max(document_scores.values())
+            lexical_ranked = [
+                (
+                    score / best_chunk
+                    + _DOCUMENT_SCORE_WEIGHT * document_scores.get(row["path"], 0.0) / best_document,
+                    row,
+                )
+                for score, row in lexical_ranked
+            ]
 
         lexical_ranked.sort(
             key=lambda pair: (-pair[0], pair[1]["path"].casefold(), pair[1]["chunk_index"])

@@ -236,3 +236,47 @@ def test_dna_fidelity_extends_the_error_threshold() -> None:
     assert "2,3 миллиарда" in russian and "2.3 billion" in english and "229" in russian
     assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
     assert _linked_advanced("Biology", "dna_replication_fidelity_and_repair")
+
+
+def test_synaptic_plasticity_lesson() -> None:
+    russian, english = _sections("Biology", "synaptic_plasticity_and_learning")
+    assert "AMPA" in russian and "NMDA" in english and "Wx + b" in english
+    assert "аналогия" in russian and "analogy" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked_advanced("Biology", "synaptic_plasticity_and_learning")
+
+
+def test_gradient_descent_step_in_two_variables() -> None:
+    def f(x: float, y: float) -> float:
+        return x * x + 3 * y * y
+
+    gradient = (2 * 1, 6 * 1)
+    point = (1 - 0.1 * gradient[0], 1 - 0.1 * gradient[1])
+    assert all(math.isclose(a, b) for a, b in zip(point, (0.8, 0.4)))
+    assert math.isclose(f(1, 1), 4) and math.isclose(f(*point), 1.12)
+    russian, english = _sections("Mathematics", "gradient_and_partial_derivatives")
+    assert "x′ = x − ε∇f(x)" in russian and "x′ = x − ε∇f(x)" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked_advanced("Mathematics", "gradient_and_partial_derivatives")
+
+
+def test_michaelis_menten_rate() -> None:
+    def rate(substrate: float) -> float:
+        return 100 * substrate / (2 + substrate)
+
+    assert math.isclose(rate(6), 75) and math.isclose(rate(2), 50) and rate(50) < 100
+    assert math.isclose(rate(18), 90)
+    russian, english = _sections("Chemistry", "enzyme_kinetics_michaelis_menten")
+    assert "v = 100 · 6 / (2 + 6) = 75" in russian and "v = 100 · 6 / (2 + 6) = 75" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked_advanced("Chemistry", "enzyme_kinetics_michaelis_menten")
+
+
+def test_bioethics_lesson_keeps_responsibility_questions() -> None:
+    russian, english = _sections("Biology", "biotechnology_and_bioethics")
+    for ru_question in ("Можно ли изменение отменить?", "Кто принимает решение"):
+        assert ru_question in russian
+    assert "Can the change be undone?" in english and "Who decides" in english
+    assert "пока не удалось никому" in russian and "No one has yet built a living cell" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked_advanced("Biology", "biotechnology_and_bioethics")

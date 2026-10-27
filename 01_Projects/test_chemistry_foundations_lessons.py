@@ -58,6 +58,39 @@ def test_ph_question_uses_the_logarithmic_scale() -> None:
     assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
 
 
+def test_intermediate_lessons_follow_the_roadmap_in_order() -> None:
+    roadmap = (CHEMISTRY / "curriculum.md").read_text(encoding="utf-8")
+    intermediate = roadmap.split("## Углубление / Intermediate", 1)[1].split("## Продвинутый уровень", 1)[0]
+    assert intermediate.index("lesson:carbon_and_organic_molecules") < intermediate.index("lesson:reaction_energy_and_catalysis")
+
+
+def test_alkane_hydrogen_count_follows_from_bond_counting() -> None:
+    def hydrogens(carbons: int) -> int:
+        return 4 * carbons - 2 * (carbons - 1)
+
+    assert [hydrogens(n) for n in (1, 2, 4, 5, 8)] == [4, 6, 10, 12, 18]
+    assert all(hydrogens(n) == 2 * n + 2 for n in range(1, 20))
+    russian, english = _sections("carbon_and_organic_molecules")
+    assert "4n − 2(n − 1) = 2n + 2" in russian and "4n − 2(n − 1) = 2n + 2" in english
+    assert "C₄H₁₀" in russian and "C₄H₁₀" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+
+
+def test_arrhenius_figures_match_the_lesson() -> None:
+    gas_constant, temperature = 8.314, 298
+    per_tenfold = gas_constant * temperature * math.log(10) / 1000
+    assert round(per_tenfold, 1) == 5.7
+    assert round(math.exp(11_400 / (gas_constant * temperature))) == 100
+    # Practice task: 17.1 kJ/mol is three steps of about 5.7 kJ/mol, about 1000 times faster.
+    assert 900 < math.exp(17_100 / (gas_constant * temperature)) < 1100
+    russian, english = _sections("reaction_energy_and_catalysis")
+    assert "5,7 кДж/моль" in russian and "11,4 кДж/моль" in russian and "R = 8,314" in russian
+    assert "5.7 kJ/mol" in english and "11.4 kJ/mol" in english and "R = 8.314" in english
+    # The lesson must keep the catalyst from changing ΔG, as the sources state.
+    assert "не меняет ΔG" in russian and "does not change a reaction's ΔG" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+
+
 def test_every_chemistry_lesson_cites_openstax_pages() -> None:
     for lesson in sorted((CHEMISTRY / "lessons").glob("*.md")):
         sources = lesson.read_text(encoding="utf-8").split("## Sources", 1)[1]

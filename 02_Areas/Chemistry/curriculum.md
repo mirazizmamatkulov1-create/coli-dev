@@ -13,8 +13,8 @@
 
 | Модуль / Module | Результат обучения / Learning outcome | Урок / Lesson |
 |---|---|---|
-| Углерод и органические молекулы / Carbon and organic molecules | Читать простые структурные формулы и связывать функциональные группы со свойствами биомолекул. / Read simple structural formulas and connect functional groups to the properties of biomolecules. | |
-| Энергия реакций и катализ / Reaction energy and catalysis | Различать изменение энергии реакции и энергию активации и объяснять, что меняет катализатор, а что нет. / Distinguish reaction energy change from activation energy and explain what a catalyst does and does not change. | |
+| Углерод и органические молекулы / Carbon and organic molecules | Читать простые структурные формулы и связывать функциональные группы со свойствами биомолекул. / Read simple structural formulas and connect functional groups to the properties of biomolecules. | lesson:carbon_and_organic_molecules |
+| Энергия реакций и катализ / Reaction energy and catalysis | Различать изменение энергии реакции и энергию активации и объяснять, что меняет катализатор, а что нет. / Distinguish reaction energy change from activation energy and explain what a catalyst does and does not change. | lesson:reaction_energy_and_catalysis |
 | Скорость реакции и химическое равновесие / Reaction rate and chemical equilibrium | Предсказывать сдвиг равновесия при изменении концентраций, отличая скорость от положения равновесия. / Predict equilibrium shifts when concentrations change, separating rate from equilibrium position. | |
 
 ## Продвинутый уровень / Advanced

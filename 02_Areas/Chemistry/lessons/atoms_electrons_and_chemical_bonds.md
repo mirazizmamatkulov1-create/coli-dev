@@ -25,7 +25,7 @@ source_review_interval_days: 365
 
 ### Исследуй и потренируйся
 
-Для водорода (1 электрон), кислорода (8), азота (7) и углерода (6) распиши электроны по оболочкам: на первой не больше двух, остальные — на второй. Посчитай, сколько электронов каждому не хватает до заполненной внешней оболочки (у водорода — до двух), и сравни с числом связей в H₂O, NH₃ и CH₄.
+Для водорода (1 электрон), кислорода (8), азота (7) и углерода (6) распиши электроны по оболочкам: на первой не больше двух, остальные — на второй. Посчитай, сколько электронов каждому не хватает до заполненной внешней оболочки (у водорода — до двух), и сравни с числом связей в H₂O, NH₃ и CH₄. Проверь себя в тренажёре: собери из центрального атома и атомов водорода каждую из этих молекул и посмотри, что будет, если добавить лишний водород.
 
 ### Вопрос
 
@@ -65,7 +65,7 @@ If one atom pulls the shared electrons more strongly, the bond becomes polar cov
 
 ### Explore and practise
 
-For hydrogen (1 electron), oxygen (8), nitrogen (7), and carbon (6), distribute the electrons into shells: at most two in the first shell, the rest in the second. Count how many electrons each one is short of a full outer shell (for hydrogen, short of two), and compare with the number of bonds in H₂O, NH₃, and CH₄.
+For hydrogen (1 electron), oxygen (8), nitrogen (7), and carbon (6), distribute the electrons into shells: at most two in the first shell, the rest in the second. Count how many electrons each one is short of a full outer shell (for hydrogen, short of two), and compare with the number of bonds in H₂O, NH₃, and CH₄. Check yourself in the lab: build each of these molecules from a central atom and hydrogen atoms, and see what happens if you add an extra hydrogen.
 
 ### Question
 

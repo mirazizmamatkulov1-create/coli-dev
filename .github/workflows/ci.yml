@@ -430,6 +430,12 @@ jobs:
             -o "$RUNNER_TEMP/verify-replicator-error-threshold"
           "$RUNNER_TEMP/verify-replicator-error-threshold"
 
+      - name: Verify chemistry lab models / Проверка моделей тренажёров химии
+        run: |
+          swiftc macOS/ColiDev/App/ChemistryLabs.swift macOS/ColiDev/scripts/verify_chemistry_labs.swift \
+            -o "$RUNNER_TEMP/verify-chemistry-labs"
+          "$RUNNER_TEMP/verify-chemistry-labs"
+
       - name: Verify pendulum model / Проверка модели маятника
         run: |
           swiftc macOS/ColiDev/App/Pendulum.swift macOS/ColiDev/scripts/verify_pendulum.swift \

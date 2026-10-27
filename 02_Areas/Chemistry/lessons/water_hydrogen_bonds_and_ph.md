@@ -25,7 +25,7 @@ source_review_interval_days: 365
 
 ### Исследуй и потренируйся
 
-Посчитай, во сколько раз больше ионов H⁺ в растворе с pH 3, чем в растворе с pH 7. Затем найди pH раствора, в котором ионов H⁺ в 1000 раз меньше, чем в растворе с pH 5. Подсказка: каждая единица pH — это множитель 10.
+Посчитай, во сколько раз больше ионов H⁺ в растворе с pH 3, чем в растворе с pH 7. Затем найди pH раствора, в котором ионов H⁺ в 1000 раз меньше, чем в растворе с pH 5. Подсказка: каждая единица pH — это множитель 10. Проверь ответы в тренажёре шкалы pH: он сравнивает любой раствор с чистой водой.
 
 ### Вопрос
 
@@ -65,7 +65,7 @@ A small fraction of water molecules splits into H⁺ and OH⁻ ions. The acidity
 
 ### Explore and practise
 
-Work out how many times more H⁺ ions there are in a solution with pH 3 than in one with pH 7. Then find the pH of a solution with 1000 times fewer H⁺ ions than a solution with pH 5. Hint: each pH unit is a factor of 10.
+Work out how many times more H⁺ ions there are in a solution with pH 3 than in one with pH 7. Then find the pH of a solution with 1000 times fewer H⁺ ions than a solution with pH 5. Hint: each pH unit is a factor of 10. Check your answers in the pH scale lab: it compares any solution with pure water.
 
 ### Question
 

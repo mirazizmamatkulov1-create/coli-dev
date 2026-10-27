@@ -1867,8 +1867,14 @@ private struct PracticeLab: View {
         case .physics:
             ForceLab()
         case .chemistry:
-            // No chemistry lab yet: the lesson's own practice task and question carry the module.
-            EmptyView()
+            if moduleResource == "water_hydrogen_bonds_and_ph" {
+                PHScaleLab()
+            } else if moduleResource == "atoms_electrons_and_chemical_bonds" {
+                MoleculeBuilderLab()
+            } else {
+                // The intro lesson has no lab: its practice task and question carry the module.
+                EmptyView()
+            }
         case .biology:
             CellLab()
         case .zoology:
@@ -11114,6 +11120,194 @@ private struct ReplicatorErrorThresholdLab: View {
                     .frame(width: 2)
                     .offset(x: geometry.size.width * 0.5)
             }
+        }
+    }
+}
+
+private struct PHScaleLab: View {
+    @EnvironmentObject private var store: LearningStore
+    @State private var pH = 4.0
+
+    private var exponentDescription: String {
+        let digits = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"]
+        let exponent = String(Int(pH)).compactMap { Int(String($0)) }.map { digits[$0] }.joined()
+        return "10⁻" + exponent
+    }
+
+    private var comparisonDescription: String {
+        let ratio = PHScaleModel.hydrogenRatio(pH: pH, comparedTo: PHScaleModel.neutralPH)
+        let locale = Locale(identifier: store.language == .ru ? "ru_RU" : "en_US")
+        switch PHScaleModel.acidity(pH: pH) {
+        case .acidic:
+            return String(format: L10n.text("lab.ph.more", store.language), Int(ratio.rounded()).formatted(.number.locale(locale)))
+        case .basic:
+            return String(format: L10n.text("lab.ph.fewer", store.language), Int((1 / ratio).rounded()).formatted(.number.locale(locale)))
+        case .neutral:
+            return L10n.text("lab.ph.same", store.language)
+        }
+    }
+
+    private var acidityKey: String {
+        switch PHScaleModel.acidity(pH: pH) {
+        case .acidic: return "lab.ph.acidic"
+        case .neutral: return "lab.ph.neutral"
+        case .basic: return "lab.ph.basic"
+        }
+    }
+
+    var body: some View {
+        LabCard {
+            Text(L10n.text("lab.ph.title", store.language))
+                .font(.headline)
+            Text(L10n.text("lab.ph.hint", store.language))
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(String(format: L10n.text("lab.ph.value", store.language), String(Int(pH))))
+                    .font(.headline.monospacedDigit())
+                Slider(value: snappedToWholeUnits, in: PHScaleModel.pHRange)
+                    .accessibilityLabel(L10n.text("lab.ph.sliderLabel", store.language))
+                    .accessibilityValue(Text(verbatim: String(Int(pH))))
+                    .accessibilityIdentifier("lab.ph.slider")
+            }
+            pHScale
+                .frame(height: 26)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(L10n.text("lab.ph.scale", store.language))
+                .accessibilityValue(Text(verbatim: String(Int(pH))))
+
+            Text(String(format: L10n.text("lab.ph.concentration", store.language), exponentDescription))
+                .font(.callout.monospacedDigit())
+            Label(L10n.text(acidityKey, store.language), systemImage: "drop.fill")
+                .font(.callout.weight(.medium))
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("lab.ph.acidity")
+            Text(comparisonDescription)
+                .font(.callout.monospacedDigit())
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("lab.ph.comparison")
+            Text(L10n.text("lab.ph.limit", store.language))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // Whole pH units keep the powers of ten exact; `step:` would draw tick marks under the slider.
+    private var snappedToWholeUnits: Binding<Double> {
+        Binding(get: { pH }, set: { pH = $0.rounded() })
+    }
+
+    // Acidic red through neutral green to basic blue, with the current pH marked.
+    private var pHScale: some View {
+        GeometryReader { geometry in
+            let fraction = pH / PHScaleModel.pHRange.upperBound
+            ZStack(alignment: .leading) {
+                Capsule().fill(LinearGradient(colors: [.red, .orange, .green, .teal, .blue], startPoint: .leading, endPoint: .trailing))
+                Circle()
+                    .strokeBorder(Color.primary, lineWidth: 3)
+                    .background(Circle().fill(Color.white.opacity(0.85)))
+                    .frame(width: 22, height: 22)
+                    .offset(x: max(0, geometry.size.width * CGFloat(fraction) - 11))
+            }
+        }
+    }
+}
+
+private struct MoleculeBuilderLab: View {
+    @EnvironmentObject private var store: LearningStore
+    @State private var central = MoleculeBuilderModel.CentralAtom.carbon
+    @State private var hydrogens = 2
+
+    private var status: MoleculeBuilderModel.Status {
+        MoleculeBuilderModel.status(central: central, hydrogens: hydrogens)
+    }
+
+    private var atomName: String { L10n.text(central.nameKey, store.language) }
+
+    private var statusDescription: String {
+        switch status {
+        case .complete:
+            let name = MoleculeBuilderModel.moleculeKey(central: central, hydrogens: hydrogens).map { L10n.text($0, store.language) } ?? ""
+            return String(format: L10n.text("lab.molecule.complete", store.language), name)
+        case .missingBonds(let count):
+            return String(format: L10n.text("lab.molecule.missing", store.language), String(count))
+        case .tooManyBonds(let count):
+            return String(format: L10n.text("lab.molecule.tooMany", store.language), String(count), atomName, String(central.valence))
+        }
+    }
+
+    var body: some View {
+        LabCard {
+            Text(L10n.text("lab.molecule.title", store.language))
+                .font(.headline)
+            Text(L10n.text("lab.molecule.hint", store.language))
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Picker(L10n.text("lab.molecule.central", store.language), selection: $central) {
+                ForEach(MoleculeBuilderModel.CentralAtom.allCases) { atom in
+                    Text(atom.rawValue).tag(atom)
+                }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("lab.molecule.central")
+            Text(String(format: L10n.text("lab.molecule.electrons", store.language), atomName, String(central.electrons), String(central.outerElectrons), String(central.valence)))
+                .font(.callout.monospacedDigit())
+                .fixedSize(horizontal: false, vertical: true)
+
+            Stepper(value: $hydrogens, in: MoleculeBuilderModel.hydrogenRange) {
+                Text(String(format: L10n.text("lab.molecule.hydrogens", store.language), String(hydrogens)))
+                    .monospacedDigit()
+            }
+            .accessibilityLabel(Text(L10n.text("lab.molecule.hydrogensLabel", store.language)))
+            .accessibilityValue(Text(verbatim: String(hydrogens)))
+            .accessibilityIdentifier("lab.molecule.hydrogens")
+
+            HStack(alignment: .center, spacing: 18) {
+                moleculeDrawing
+                    .frame(width: 150, height: 150)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(L10n.text("lab.molecule.drawing", store.language))
+                    .accessibilityValue(Text(verbatim: MoleculeBuilderModel.formula(central: central, hydrogens: hydrogens)))
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(MoleculeBuilderModel.formula(central: central, hydrogens: hydrogens))
+                        .font(.system(size: 34, weight: .semibold, design: .rounded))
+                        .accessibilityIdentifier("lab.molecule.formula")
+                    Label(statusDescription, systemImage: status == .complete ? "checkmark.seal" : "exclamationmark.circle")
+                        .font(.callout.weight(.medium))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("lab.molecule.status")
+                }
+            }
+            Text(L10n.text("lab.molecule.limit", store.language))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // A flat sketch: bonds within the valence are solid, extra ones dashed red. Real 3D shapes and angles differ.
+    private var moleculeDrawing: some View {
+        Canvas { context, size in
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let radius = min(size.width, size.height) / 2 - 18
+            for index in 0..<hydrogens {
+                let angle = -Double.pi / 2 + Double(index) * 2 * Double.pi / Double(max(hydrogens, 1))
+                let point = CGPoint(x: center.x + radius * cos(angle), y: center.y + radius * sin(angle))
+                var bond = Path()
+                bond.move(to: center)
+                bond.addLine(to: point)
+                let fits = index < central.valence
+                context.stroke(bond, with: .color(fits ? .secondary : .red), style: StrokeStyle(lineWidth: 3, dash: fits ? [] : [5, 4]))
+                context.fill(Path(ellipseIn: CGRect(x: point.x - 14, y: point.y - 14, width: 28, height: 28)), with: .color(fits ? Color.accentColor.opacity(0.85) : .red.opacity(0.6)))
+                context.draw(Text("H").font(.callout.weight(.bold)).foregroundColor(.white), at: point)
+            }
+            context.fill(Path(ellipseIn: CGRect(x: center.x - 22, y: center.y - 22, width: 44, height: 44)), with: .color(.indigo))
+            context.draw(Text(central.rawValue).font(.title3.weight(.bold)).foregroundColor(.white), at: center)
         }
     }
 }

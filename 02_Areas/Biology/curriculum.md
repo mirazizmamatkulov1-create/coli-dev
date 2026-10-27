@@ -28,7 +28,7 @@
 | Физиология растений и животных / Plant and animal physiology | Связывать строение систем органов с обменом, регуляцией и средой. / Relate organ systems to metabolism, regulation, and environment. | |
 | Нейрон и потенциал действия / Neurons and the action potential | Объяснять потенциал покоя, порог и принцип «всё или ничего», отличая упрощённую модель от реального нейрона. / Explain the resting potential, threshold, and all-or-none firing while distinguishing a simplified model from a real neuron. | lesson:neurons_and_action_potentials |
 | Синапс и суммация сигналов / Synapses and signal summation | Объяснять передачу через химический синапс и предсказывать, доведёт ли сумма возбуждающих и тормозящих сигналов нейрон до порога. / Explain chemical synaptic transmission and predict whether summed excitatory and inhibitory inputs reach threshold. | lesson:synapses_and_signal_summation |
-| Популяционная генетика и экология / Population genetics and ecology | Использовать простые модели для описания изменения частот признаков и популяций. / Use simple models for trait and population change. | |
+| Популяционная генетика и экология / Population genetics and ecology | Использовать простые модели для описания изменения частот признаков и популяций. / Use simple models for trait and population change. | lesson:population_genetics_hardy_weinberg |
 
 ## Продвинутый уровень / Advanced
 

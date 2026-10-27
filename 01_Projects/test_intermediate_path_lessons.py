@@ -117,3 +117,50 @@ def test_http_status_classes() -> None:
     assert '"api/status"' in models and "GET /api/status" in russian and "GET /api/status" in english
     assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
     assert _linked("Programming", "http_and_apis")
+
+
+def test_seesaw_balance() -> None:
+    assert math.isclose(30 * 2 / 40, 1.5) and math.isclose(20 * 0.8 / 0.2, 80)
+    russian, english = _sections("Physics", "torque_and_rotational_equilibrium")
+    assert "r = 60 / 40 = 1,5 м" in russian and "r = 60 / 40 = 1.5 m" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked("Physics", "torque_and_rotational_equilibrium")
+
+
+def test_magnetic_force_on_wire() -> None:
+    assert math.isclose(2 * 0.5 * 0.4 * math.sin(math.radians(90)), 0.4)
+    # Practice task follows the source's worked example: 20.0 A, 0.0500 m, 1.50 T gives 1.50 N.
+    assert math.isclose(20 * 0.05 * 1.5, 1.5) and math.isclose(1.5 * math.sin(math.radians(30)), 0.75)
+    russian, english = _sections("Physics", "magnetic_force_on_current")
+    assert "2 · 0,5 · 0,4 · 1 = 0,4 Н" in russian and "2 · 0.5 · 0.4 · 1 = 0.4 N" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked("Physics", "magnetic_force_on_current")
+
+
+def test_speed_of_light_in_water() -> None:
+    speed = 3.00e8 / 1.333
+    assert round(speed / 1e8, 2) == 2.25
+    refracted = math.degrees(math.asin(1.00 * math.sin(math.radians(30)) / 1.52))
+    assert 19 < refracted < 20
+    russian, english = _sections("Physics", "refraction_of_light")
+    assert "2,25 · 10⁸ м/с" in russian and "2.25 · 10⁸ m/s" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked("Physics", "refraction_of_light")
+
+
+def test_homeostasis_lesson_names_negative_feedback() -> None:
+    russian, english = _sections("Biology", "homeostasis_and_feedback")
+    assert "Отрицательная обратная связь" in _answer(russian, "Варианты").split("\n")[0]
+    assert "точк" in russian and "set point" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked("Biology", "homeostasis_and_feedback")
+
+
+def test_dependency_lesson_points_at_real_project_files() -> None:
+    root = AREAS.parent
+    assert (root / "requirements.txt").is_file() and (root / "requirements-test.txt").is_file()
+    assert "COLIDEV_PARENT_PID" in (root / "01_Projects" / "parent_watchdog.py").read_text(encoding="utf-8")
+    russian, english = _sections("Programming", "virtual_environments_and_dependencies")
+    assert "pip install -r requirements.txt" in russian and "pip install -r requirements.txt" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked("Programming", "virtual_environments_and_dependencies")

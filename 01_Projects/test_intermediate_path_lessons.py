@@ -75,3 +75,45 @@ def test_matrix_vector_product_matches_the_lesson() -> None:
     assert "h = g(Wx + b)" in russian and "h = g(Wx + b)" in english
     assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
     assert _linked("Mathematics", "vectors_and_matrices")
+
+
+def test_parallel_circuit_current() -> None:
+    parallel = 1 / (1 / 2 + 1 / 6)
+    assert math.isclose(parallel, 1.5) and math.isclose(12 / parallel, 8)
+    assert math.isclose(12 / 2 + 12 / 6, 8) and math.isclose(12 / (2 + 6), 1.5)
+    russian, english = _sections("Physics", "circuits_and_ohms_law")
+    assert "I = 12 / 1,5 = 8 А" in russian and "I = 12 / 1.5 = 8 A" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked("Physics", "circuits_and_ohms_law")
+
+
+def test_bacterial_doubling() -> None:
+    assert 2 ** (180 // 30) == 64 and 24 * 60 // 30 == 48 and 2 ** (120 // 20) == 64
+    russian, english = _sections("Biology", "microbial_growth_and_prokaryotes")
+    assert "2⁶ = 64" in russian and "2⁶ = 64" in english
+    assert "стационарной фазе" in russian and "stationary phase" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked("Biology", "microbial_growth_and_prokaryotes")
+
+
+def test_counter_instances_keep_separate_state() -> None:
+    russian, english = _sections("Programming", "python_classes_and_composition")
+    code = russian.split("```python", 1)[1].split("```", 1)[0]
+    question = russian.split("### Вопрос", 1)[1].split("```python", 1)[1].split("```", 1)[0]
+    namespace: dict = {}
+    exec(code + "\n" + question.replace("print(a.count)", "result = (a.count, b.count)"), namespace)
+    assert namespace["result"] == (2, 1)
+    assert "не проверяет" in russian and "does not check them at run time" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked("Programming", "python_classes_and_composition")
+
+
+def test_http_status_classes() -> None:
+    russian, english = _sections("Programming", "http_and_apis")
+    for code in ("200 OK", "404 Not Found", "500 Internal Server Error"):
+        assert code in russian and code in english
+    # The lesson's example of ColiDev's own API must exist in the app source.
+    models = (AREAS.parent / "macOS" / "ColiDev" / "App" / "AppModels.swift").read_text(encoding="utf-8")
+    assert '"api/status"' in models and "GET /api/status" in russian and "GET /api/status" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked("Programming", "http_and_apis")

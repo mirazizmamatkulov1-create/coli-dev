@@ -24,7 +24,7 @@
 | Движение тела, брошенного под углом / Projectile motion | Разделять горизонтальную и вертикальную компоненты и исследовать зависимость дальности и высоты от угла запуска. / Separate horizontal and vertical components and explore how launch angle affects range and height. | lesson:projectile_motion |
 | Упругие столкновения / Elastic collisions | Находить обе конечные скорости по сохранению импульса и кинетической энергии и сравнивать с прилипанием. / Find both final velocities from momentum and kinetic-energy conservation and compare with sticking. | lesson:elastic_collisions |
 | Термодинамика и статистические идеи / Thermodynamics and statistical ideas | Связывать макроскопические величины с передачей энергии и множеством микросостояний. / Connect macroscopic quantities with energy transfer and microstates. | lesson:entropy_and_the_second_law |
-| Электрические цепи и электростатика / Circuits and electrostatics | Моделировать потенциал, поле, ток и простые цепи с проверкой граничных случаев. / Model potential, fields, current, and circuits. | |
+| Электрические цепи и электростатика / Circuits and electrostatics | Моделировать потенциал, поле, ток и простые цепи с проверкой граничных случаев. / Model potential, fields, current, and circuits. | lesson:circuits_and_ohms_law |
 | Магнетизм и электромагнитная индукция / Magnetism and electromagnetic induction | Объяснять силы на заряды и проводники и направление индуцированного эффекта. / Explain magnetic forces and induced effects. | |
 | Оптика и физика волн / Optics and wave physics | Использовать интерференцию, дифракцию и геометрическую оптику там, где применимы их модели. / Apply ray, interference, and diffraction models within their limits. | |
 

@@ -1871,6 +1871,8 @@ private struct PracticeLab: View {
                 PHScaleLab()
             } else if moduleResource == "atoms_electrons_and_chemical_bonds" {
                 MoleculeBuilderLab()
+            } else if moduleResource == "reaction_energy_and_catalysis" {
+                ReactionEnergyLab()
             } else {
                 // The intro lesson has no lab: its practice task and question carry the module.
                 EmptyView()
@@ -11308,6 +11310,155 @@ private struct MoleculeBuilderLab: View {
             }
             context.fill(Path(ellipseIn: CGRect(x: center.x - 22, y: center.y - 22, width: 44, height: 44)), with: .color(.indigo))
             context.draw(Text(central.rawValue).font(.title3.weight(.bold)).foregroundColor(.white), at: center)
+        }
+    }
+}
+
+private struct ReactionEnergyLab: View {
+    @EnvironmentObject private var store: LearningStore
+    @State private var freeEnergy = -30.0
+    @State private var activation = 80.0
+    @State private var lowering = 20.0
+    @State private var catalystOn = true
+
+    private typealias Model = ReactionEnergyModel
+
+    private var barrier: Double { Model.uncatalyzedBarrier(activation: activation, freeEnergyChange: freeEnergy) }
+    private var catalyzedBarrier: Double {
+        Model.catalyzedBarrier(activation: activation, lowering: catalystOn ? lowering : 0, freeEnergyChange: freeEnergy)
+    }
+    private var speedup: Double {
+        Model.speedup(activation: activation, lowering: catalystOn ? lowering : 0, freeEnergyChange: freeEnergy)
+    }
+
+    private func energy(_ value: Double) -> String {
+        L10n.measurement(value, fractionDigits: 0, unit: "kJ/mol", store.language)
+    }
+
+    private var kindDescription: String {
+        let key: String
+        switch Model.kind(freeEnergyChange: freeEnergy) {
+        case .exergonic: key = "lab.energy.exergonic"
+        case .endergonic: key = "lab.energy.endergonic"
+        case .balanced: key = "lab.energy.balanced"
+        }
+        return String(format: L10n.text(key, store.language), energy(freeEnergy))
+    }
+
+    private var speedupDescription: String {
+        let text: String
+        if speedup < 10 {
+            text = L10n.number(speedup, fractionDigits: 1, store.language)
+        } else {
+            let locale = Locale(identifier: store.language == .ru ? "ru_RU" : "en_US")
+            text = Int(speedup.rounded()).formatted(.number.locale(locale))
+        }
+        return String(format: L10n.text("lab.energy.speedup", store.language), text)
+    }
+
+    var body: some View {
+        LabCard {
+            Text(L10n.text("lab.energy.title", store.language))
+                .font(.headline)
+            Text(L10n.text("lab.energy.hint", store.language))
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            labeledSlider("lab.energy.freeEnergy", "lab.energy.freeEnergyLabel", value: $freeEnergy, range: Model.freeEnergyRange, increment: 5)
+            labeledSlider("lab.energy.activation", "lab.energy.activationLabel", value: $activation, range: Model.activationRange, increment: 5)
+            Toggle(L10n.text("lab.energy.catalyst", store.language), isOn: $catalystOn)
+                .accessibilityIdentifier("lab.energy.catalyst")
+            if catalystOn {
+                labeledSlider("lab.energy.lowering", "lab.energy.loweringLabel", value: $lowering, range: Model.loweringRange, increment: 1)
+            }
+
+            profileChart
+                .frame(height: 190)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(L10n.text("lab.energy.chart", store.language))
+                .accessibilityValue(Text(String(format: L10n.text("lab.energy.barriers", store.language), energy(barrier), energy(catalyzedBarrier))))
+            HStack(spacing: 14) {
+                Label(L10n.text("lab.energy.legendPlain", store.language), systemImage: "line.diagonal")
+                    .foregroundStyle(.orange)
+                if catalystOn {
+                    Label(L10n.text("lab.energy.legendCatalyst", store.language), systemImage: "line.diagonal")
+                        .foregroundStyle(.green)
+                }
+            }
+            .font(.caption)
+
+            Text(kindDescription)
+                .font(.callout.weight(.medium))
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("lab.energy.kind")
+            Text(String(format: L10n.text("lab.energy.barriers", store.language), energy(barrier), energy(catalyzedBarrier)))
+                .font(.callout.monospacedDigit())
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("lab.energy.barrierValues")
+            Text(speedupDescription)
+                .font(.headline.monospacedDigit())
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("lab.energy.speedup")
+            if catalystOn {
+                Text(String(format: L10n.text("lab.energy.sameFreeEnergy", store.language), energy(freeEnergy)))
+                    .font(.callout)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if activation < Model.minimumBarrier(freeEnergyChange: freeEnergy)
+                || (catalystOn && barrier - lowering < Model.minimumBarrier(freeEnergyChange: freeEnergy)) {
+                Text(L10n.text("lab.energy.floor", store.language))
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Text(L10n.text("lab.energy.limit", store.language))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // Rounds without `step:`, which would draw a dense row of tick marks under the slider.
+    private func labeledSlider(_ titleKey: String, _ labelKey: String, value: Binding<Double>, range: ClosedRange<Double>, increment: Double) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(String(format: L10n.text(titleKey, store.language), energy(value.wrappedValue)))
+                .monospacedDigit()
+            Slider(value: Binding(get: { value.wrappedValue }, set: { value.wrappedValue = ($0 / increment).rounded() * increment }), in: range)
+                .accessibilityLabel(L10n.text(labelKey, store.language))
+                .accessibilityValue(Text(energy(value.wrappedValue)))
+        }
+    }
+
+    // Energy on a fixed −70…125 kJ/mol axis so that changes stay comparable; reactants sit at 0.
+    private var profileChart: some View {
+        Canvas { context, size in
+            let lower = -70.0
+            let upper = 125.0
+            func y(_ value: Double) -> CGFloat { size.height * CGFloat((upper - value) / (upper - lower)) }
+            func path(barrier: Double) -> Path {
+                var path = Path()
+                for step in 0...60 {
+                    let x = Double(step) / 60
+                    let point = CGPoint(x: size.width * CGFloat(x), y: y(Model.profileEnergy(at: x, barrier: barrier, freeEnergyChange: freeEnergy)))
+                    if step == 0 { path.move(to: point) } else { path.addLine(to: point) }
+                }
+                return path
+            }
+            for level in [0.0, freeEnergy] {
+                var line = Path()
+                line.move(to: CGPoint(x: 0, y: y(level)))
+                line.addLine(to: CGPoint(x: size.width, y: y(level)))
+                context.stroke(line, with: .color(.secondary.opacity(0.35)), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+            }
+            context.stroke(path(barrier: barrier), with: .color(.orange), lineWidth: 3)
+            if catalystOn {
+                context.stroke(path(barrier: catalyzedBarrier), with: .color(.green), style: StrokeStyle(lineWidth: 3, dash: [7, 5]))
+            }
+            // Labels sit under their levels, where the curve never goes; near the bottom edge they move above.
+            let productLabelY = freeEnergy - 14 > lower ? y(freeEnergy) + 10 : y(freeEnergy) - 10
+            context.draw(Text(L10n.text("lab.energy.reactants", store.language)).font(.caption), at: CGPoint(x: 6, y: y(0) + 10), anchor: .leading)
+            context.draw(Text(L10n.text("lab.energy.products", store.language)).font(.caption), at: CGPoint(x: size.width - 6, y: productLabelY), anchor: .trailing)
         }
     }
 }

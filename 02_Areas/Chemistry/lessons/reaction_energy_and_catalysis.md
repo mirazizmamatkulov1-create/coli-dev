@@ -27,7 +27,7 @@ source_review_interval_days: 365
 
 ### Исследуй и потренируйся
 
-Посчитай по уравнению Аррениуса, во сколько раз ускорится реакция при 25 °C, если катализатор снизит энергию активации на 17,1 кДж/моль. Подсказка: каждые 5,7 кДж/моль — это множитель около 10. Затем объясни своими словами, почему глюкоза в сахарнице не сгорает сама, хотя её окисление выделяет энергию.
+Посчитай по уравнению Аррениуса, во сколько раз ускорится реакция при 25 °C, если катализатор снизит энергию активации на 17,1 кДж/моль. Подсказка: каждые 5,7 кДж/моль — это множитель около 10. Затем объясни своими словами, почему глюкоза в сахарнице не сгорает сама, хотя её окисление выделяет энергию. Проверь расчёт в тренажёре энергетической диаграммы: включи катализатор и посмотри, что меняется, а что нет.
 
 ### Вопрос
 
@@ -69,7 +69,7 @@ A catalyst speeds a reaction by opening another pathway with a lower activation 
 
 ### Explore and practise
 
-Use the Arrhenius equation to work out how many times faster a reaction runs at 25 °C if a catalyst lowers its activation energy by 17.1 kJ/mol. Hint: every 5.7 kJ/mol is a factor of about 10. Then explain in your own words why glucose in a sugar bowl does not burn on its own, even though its oxidation releases energy.
+Use the Arrhenius equation to work out how many times faster a reaction runs at 25 °C if a catalyst lowers its activation energy by 17.1 kJ/mol. Hint: every 5.7 kJ/mol is a factor of about 10. Then explain in your own words why glucose in a sugar bowl does not burn on its own, even though its oxidation releases energy. Check the calculation in the energy diagram lab: switch on the catalyst and see what changes and what does not.
 
 ### Question
 

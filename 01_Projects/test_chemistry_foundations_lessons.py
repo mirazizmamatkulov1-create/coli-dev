@@ -104,12 +104,13 @@ def test_chemistry_labs_are_wired_into_the_app_project_and_ci() -> None:
     strings = (APP_ROOT / "App" / "L10n.swift").read_text(encoding="utf-8")
     assert 'moduleResource == "water_hydrogen_bonds_and_ph"' in views and "PHScaleLab()" in views
     assert 'moduleResource == "atoms_electrons_and_chemical_bonds"' in views and "MoleculeBuilderLab()" in views
+    assert 'moduleResource == "reaction_energy_and_catalysis"' in views and "ReactionEnergyLab()" in views
     assert "ChemistryLabs.swift in Sources" in project
     assert "scripts/verify_chemistry_labs.swift" in workflow
-    used = set(re.findall(r'(?<!accessibilityIdentifier\()"(lab\.(?:ph|molecule)\.[A-Za-z]+)"', views))
+    used = set(re.findall(r'(?<!accessibilityIdentifier\()"(lab\.(?:ph|molecule|energy)\.[A-Za-z]+)"', views))
     # Atom and molecule names are looked up by key from the model, e.g. "lab.molecule.name.C".
     used |= {f"lab.molecule.{group}.{atom}" for group in ("atom", "name") for atom in "HONC"}
-    defined = re.findall(r'^\s*"(lab\.(?:ph|molecule)\.[A-Za-z.]+)":', strings, re.MULTILINE)
+    defined = re.findall(r'^\s*"(lab\.(?:ph|molecule|energy)\.[A-Za-z.]+)":', strings, re.MULTILINE)
     assert used and used <= set(defined) and len(defined) == len(set(defined))
 
 

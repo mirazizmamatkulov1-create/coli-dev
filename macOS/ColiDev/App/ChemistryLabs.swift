@@ -94,3 +94,55 @@ enum MoleculeBuilderModel {
         return String(number).compactMap { Int(String($0)) }.map { digits[$0] }.joined()
     }
 }
+
+/// Energy profile of one reaction step for the catalysis lesson, at 25 °C.
+/// ΔG and activation energy follow OpenStax Biology 2e 6.2 and 6.5; the rate factor uses the Arrhenius
+/// equation k = A · e^(−Eₐ/RT) from Chemistry 2e 12.5, with the same factor A with and without a catalyst.
+enum ReactionEnergyModel {
+    static let gasConstant = 8.314
+    static let temperature = 298.0
+    static let freeEnergyRange = -60.0...60.0
+    static let activationRange = 40.0...120.0
+    static let loweringRange = 0.0...40.0
+
+    enum Kind: Equatable {
+        case exergonic, endergonic, balanced
+    }
+
+    static func kind(freeEnergyChange: Double) -> Kind {
+        if freeEnergyChange < 0 { return .exergonic }
+        if freeEnergyChange > 0 { return .endergonic }
+        return .balanced
+    }
+
+    /// The barrier peak must lie above both reactants (0) and products (ΔG).
+    static func minimumBarrier(freeEnergyChange: Double) -> Double {
+        max(freeEnergyChange, 0)
+    }
+
+    static func uncatalyzedBarrier(activation: Double, freeEnergyChange: Double) -> Double {
+        max(activation, minimumBarrier(freeEnergyChange: freeEnergyChange))
+    }
+
+    /// Activation energy with the catalyst, in kJ/mol; it cannot drop below the minimum barrier.
+    static func catalyzedBarrier(activation: Double, lowering: Double, freeEnergyChange: Double) -> Double {
+        max(uncatalyzedBarrier(activation: activation, freeEnergyChange: freeEnergyChange) - max(lowering, 0),
+            minimumBarrier(freeEnergyChange: freeEnergyChange))
+    }
+
+    /// How many times faster the catalysed reaction runs: e^(ΔEₐ/RT) with ΔEₐ in kJ/mol.
+    static func speedup(activation: Double, lowering: Double, freeEnergyChange: Double) -> Double {
+        let before = uncatalyzedBarrier(activation: activation, freeEnergyChange: freeEnergyChange)
+        let after = catalyzedBarrier(activation: activation, lowering: lowering, freeEnergyChange: freeEnergyChange)
+        return exp((before - after) * 1000 / (gasConstant * temperature))
+    }
+
+    /// Smooth sketch of energy along the reaction path, x from 0 (reactants) to 1 (products).
+    /// Each half rises or falls monotonically, so the highest point is exactly `barrier` at x = 0.5.
+    static func profileEnergy(at x: Double, barrier: Double, freeEnergyChange: Double) -> Double {
+        let t = min(max(x, 0), 1)
+        func smoothstep(_ u: Double) -> Double { u * u * (3 - 2 * u) }
+        if t <= 0.5 { return barrier * smoothstep(2 * t) }
+        return barrier + (freeEnergyChange - barrier) * smoothstep(2 * t - 1)
+    }
+}

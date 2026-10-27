@@ -39,6 +39,29 @@ enum ChemistryLabsVerification {
         precondition(Model.moleculeKey(central: .nitrogen, hydrogens: 4) == nil)
         precondition(Model.formula(central: .oxygen, hydrogens: 1) == "HO")
         precondition(Model.formula(central: .carbon, hydrogens: 0) == "C")
+        // Reaction energy: Arrhenius speedups quoted in the catalysis lesson.
+        typealias Energy = ReactionEnergyModel
+        let tenfold = Energy.speedup(activation: 80, lowering: 5.7, freeEnergyChange: -30)
+        precondition(tenfold > 9.9 && tenfold < 10.1, "5.7 kJ/mol ≈ ×10 at 25 °C")
+        let hundredfold = Energy.speedup(activation: 80, lowering: 11.4, freeEnergyChange: -30)
+        precondition(hundredfold > 99 && hundredfold < 101, "11.4 kJ/mol ≈ ×100 at 25 °C")
+        let thousandfold = Energy.speedup(activation: 80, lowering: 17.1, freeEnergyChange: -30)
+        precondition(thousandfold > 900 && thousandfold < 1100, "practice task: 17.1 kJ/mol ≈ ×1000")
+        precondition(Energy.speedup(activation: 80, lowering: 0, freeEnergyChange: -30) == 1)
+        precondition(Energy.catalyzedBarrier(activation: 80, lowering: 20, freeEnergyChange: -30) == 60)
+        // An endergonic step: the barrier cannot fall below the product level.
+        precondition(Energy.catalyzedBarrier(activation: 60, lowering: 40, freeEnergyChange: 40) == 40)
+        precondition(Energy.uncatalyzedBarrier(activation: 40, freeEnergyChange: 50) == 50)
+        precondition(Energy.kind(freeEnergyChange: -30) == .exergonic)
+        precondition(Energy.kind(freeEnergyChange: 20) == .endergonic)
+        precondition(Energy.kind(freeEnergyChange: 0) == .balanced)
+        for (barrier, change) in [(80.0, -30.0), (60.0, 40.0), (45.0, -60.0)] {
+            precondition(Energy.profileEnergy(at: 0, barrier: barrier, freeEnergyChange: change) == 0, "starts at reactants")
+            precondition(abs(Energy.profileEnergy(at: 1, barrier: barrier, freeEnergyChange: change) - change) < 1e-9, "ends at products")
+            precondition(abs(Energy.profileEnergy(at: 0.5, barrier: barrier, freeEnergyChange: change) - barrier) < 1e-9, "peaks at the barrier")
+            let highest = stride(from: 0.0, through: 1.0, by: 0.01).map { Energy.profileEnergy(at: $0, barrier: barrier, freeEnergyChange: change) }.max()!
+            precondition(highest <= barrier + 1e-9, "the drawn curve never rises above the barrier")
+        }
         print("Chemistry lab model checks passed.")
     }
 }

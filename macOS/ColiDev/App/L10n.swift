@@ -2226,6 +2226,28 @@ enum L10n {
         "lab.molecule.name.N": ("аммиак", "ammonia"),
         "lab.molecule.name.C": ("метан", "methane"),
         "lab.molecule.limit": ("Только одинарные связи с водородом и плоская схема. Двойные связи (как в O₂ и CO₂), неподелённые пары электронов и настоящую объёмную форму молекул тренажёр не показывает. Он собирает только нейтральные молекулы: например, ион гидроксония H₃O⁺ существует, но несёт заряд.", "Single bonds to hydrogen and a flat sketch only. The lab does not show double bonds (as in O₂ and CO₂), lone electron pairs, or the real 3D shape of molecules. It builds only neutral molecules: the hydronium ion H₃O⁺, for example, exists but carries a charge."),
+        "lab.energy.title": ("Энергетическая диаграмма: барьер и катализатор", "Energy diagram: the barrier and a catalyst"),
+        "lab.energy.hint": ("Задай ΔG и энергию активации, затем включи катализатор и снижай барьер. Следи, что меняется — скорость — и что остаётся прежним — ΔG.", "Set ΔG and the activation energy, then switch on the catalyst and lower the barrier. Watch what changes, the speed, and what stays the same, ΔG."),
+        "lab.energy.freeEnergy": ("ΔG реакции: %@", "Reaction ΔG: %@"),
+        "lab.energy.freeEnergyLabel": ("Изменение свободной энергии ΔG", "Free-energy change ΔG"),
+        "lab.energy.activation": ("Энергия активации без катализатора: %@", "Activation energy without a catalyst: %@"),
+        "lab.energy.activationLabel": ("Энергия активации без катализатора", "Activation energy without a catalyst"),
+        "lab.energy.catalyst": ("Катализатор", "Catalyst"),
+        "lab.energy.lowering": ("Катализатор снижает барьер на: %@", "The catalyst lowers the barrier by: %@"),
+        "lab.energy.loweringLabel": ("На сколько катализатор снижает энергию активации", "How much the catalyst lowers the activation energy"),
+        "lab.energy.chart": ("Энергетическая диаграмма реакции: исходные вещества слева, продукты справа, вершина кривой — энергия активации.", "Reaction energy diagram: reactants on the left, products on the right, the top of the curve is the activation energy."),
+        "lab.energy.legendPlain": ("без катализатора", "without a catalyst"),
+        "lab.energy.legendCatalyst": ("с катализатором", "with a catalyst"),
+        "lab.energy.reactants": ("исходные вещества", "reactants"),
+        "lab.energy.products": ("продукты", "products"),
+        "lab.energy.exergonic": ("ΔG = %@: продукты беднее энергией, реакция выделяет энергию (экзергоническая).", "ΔG = %@: the products hold less energy, so the reaction releases energy (exergonic)."),
+        "lab.energy.endergonic": ("ΔG = %@: продукты богаче энергией, реакции нужен приток энергии (эндергоническая).", "ΔG = %@: the products hold more energy, so the reaction needs an energy input (endergonic)."),
+        "lab.energy.balanced": ("ΔG = %@: энергия продуктов и исходных веществ одинакова.", "ΔG = %@: products and reactants hold the same energy."),
+        "lab.energy.barriers": ("Энергия активации: %@ без катализатора, %@ с ним.", "Activation energy: %@ without a catalyst, %@ with it."),
+        "lab.energy.speedup": ("По уравнению Аррениуса при 25 °C реакция идёт примерно в %@ раз быстрее.", "By the Arrhenius equation at 25 °C the reaction runs about %@ times faster."),
+        "lab.energy.sameFreeEnergy": ("ΔG с катализатором не изменилось: по-прежнему %@.", "ΔG with the catalyst is unchanged: still %@."),
+        "lab.energy.floor": ("Барьер не может быть ниже уровня исходных веществ и продуктов, поэтому здесь он остановился на этом уровне.", "The barrier cannot sit below the reactants or the products, so here it stops at that level."),
+        "lab.energy.limit": ("Учебная модель одной стадии при 25 °C: множитель A в уравнении Аррениуса одинаков с катализатором и без него, форма кривой схематична. Реальные ферменты работают в несколько стадий и зависят от концентрации, температуры и pH.", "A teaching model of one step at 25 °C: the Arrhenius factor A is the same with and without the catalyst, and the curve's shape is a sketch. Real enzymes work in several steps and depend on concentration, temperature, and pH."),
         "lab.pendulum.title": ("Период маятника", "Pendulum period"),
         "lab.pendulum.hint": ("Меняй длину нити и массу груза. Сначала предскажи, от чего зависит период малых колебаний, затем проверь по числам и по качанию.", "Change the string length and the bob's mass. Predict first what the period of small swings depends on, then check the numbers and the swing."),
         "lab.pendulum.diagram": ("Маятник: длина нити показана в масштабе, размер груза — его масса.", "Pendulum: string length is drawn to scale, and the bob's size shows its mass."),
@@ -2312,7 +2334,8 @@ extension L10n {
         "m/s²": "м/с²",
         "kg·m/s": "кг·м/с",
         "Hz": "Гц",
-        "mV": "мВ"
+        "mV": "мВ",
+        "kJ/mol": "кДж/моль"
     ]
 
     /// Fixed-point number in the interface language: `number(-2.5, fractionDigits: 2, .ru)` → "−2,50".

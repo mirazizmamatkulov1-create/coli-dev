@@ -10,7 +10,7 @@ def test_all_published_curriculum_routes_resolve_in_the_repository():
     audit = audit_curriculum_routes(REPOSITORY_ROOT / "02_Areas")
 
     assert audit.errors == (), "\n".join(audit.errors)
-    assert audit.subject_count == 6
+    assert audit.subject_count == 7
     assert audit.routed_lesson_count >= 49
 
 
@@ -109,7 +109,7 @@ def test_advanced_math_optimization_route_has_a_complete_lesson():
 
 def test_full_catalog_audit_requires_bundled_intro_route_manifest(tmp_path):
     areas = tmp_path / "02_Areas"
-    for subject in ("Mathematics", "English", "Physics", "Biology", "Zoology", "Programming"):
+    for subject in ("Mathematics", "English", "Physics", "Chemistry", "Biology", "Zoology", "Programming"):
         subject_dir = areas / subject
         subject_dir.mkdir(parents=True)
         (subject_dir / "curriculum.md").write_text(

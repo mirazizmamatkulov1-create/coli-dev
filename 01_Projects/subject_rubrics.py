@@ -44,6 +44,18 @@ SUBJECT_RUBRICS: dict[str, dict[str, str]] = {
             "certainty. State model assumptions and do not turn educational explanation into medical advice."
         ),
     },
+    "chemistry": {
+        "ru": (
+            "Различай атом, молекулу и ион, наблюдаемое свойство вещества и объясняющую его модель. "
+            "Проверяй единицы и порядок величин, называй условия (температуру, концентрацию) и не "
+            "переноси упрощённое правило на все элементы и растворы."
+        ),
+        "en": (
+            "Distinguish atoms, molecules, and ions, and an observed property from the model that explains it. "
+            "Check units and orders of magnitude, state conditions such as temperature and concentration, and do "
+            "not extend a simplified rule to every element or solution."
+        ),
+    },
     "zoology": {
         "ru": (
             "Различай поведение отдельного животного, индивидуальное приспособление и наследуемую "

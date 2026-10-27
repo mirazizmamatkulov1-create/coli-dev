@@ -1844,6 +1844,8 @@ enum L10n {
         "subject.physics.subtitle": ("Модели реального мира", "Models of the real world"),
         "subject.biology": ("Биология", "Biology"),
         "subject.biology.subtitle": ("Живые системы", "Living systems"),
+        "subject.chemistry": ("Химия", "Chemistry"),
+        "subject.chemistry.subtitle": ("Атомы, связи и реакции жизни", "Atoms, bonds, and the reactions of life"),
         "subject.zoology": ("Зоология", "Zoology"),
         "subject.zoology.subtitle": ("Животные и их адаптации", "Animals and their adaptations"),
         "subject.programming": ("Программирование", "Programming"),

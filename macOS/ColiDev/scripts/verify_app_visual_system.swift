@@ -7,13 +7,14 @@ struct VerifyAppVisualSystem {
             "mathematics",
             "english",
             "physics",
+            "chemistry",
             "biology",
             "zoology",
             "programming",
         ]
 
         let tokens = coreSubjects.map(ColiDevVisualSystem.subjectToken)
-        precondition(tokens.count == 6, "Every core subject must have a visual token")
+        precondition(tokens.count == 7, "Every core subject must have a visual token")
         precondition(Set(tokens.map(\.lightHex)).count == coreSubjects.count, "Light accents must be distinct")
         precondition(Set(tokens.map(\.darkHex)).count == coreSubjects.count, "Dark accents must be distinct")
         precondition(tokens.allSatisfy { $0.lightHex != $0.darkHex }, "Each accent needs composed light and dark variants")

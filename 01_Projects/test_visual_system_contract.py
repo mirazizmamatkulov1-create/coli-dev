@@ -28,6 +28,7 @@ def test_each_core_subject_has_a_distinct_color_token():
         "mathematics",
         "english",
         "physics",
+        "chemistry",
         "biology",
         "zoology",
         "programming",

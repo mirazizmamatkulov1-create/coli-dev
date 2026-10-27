@@ -152,9 +152,9 @@ if {item.get("role") for item in agent_routes} != {
 }:
     raise SystemExit("Packaged backend did not expose all four configured AI roles")
 if {item.get("subject") for item in subject_routes} != {
-    "mathematics", "english", "physics", "biology", "zoology", "programming"
+    "mathematics", "english", "physics", "chemistry", "biology", "zoology", "programming"
 }:
-    raise SystemExit("Packaged backend did not expose all six configured subject routes")
+    raise SystemExit("Packaged backend did not expose all seven configured subject routes")
 
 route_targets = [
     (f"/settings/agent-models/{item['role']}", f"agent role {item['role']}")

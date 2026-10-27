@@ -1866,6 +1866,9 @@ private struct PracticeLab: View {
             SentenceLab()
         case .physics:
             ForceLab()
+        case .chemistry:
+            // No chemistry lab yet: the lesson's own practice task and question carry the module.
+            EmptyView()
         case .biology:
             CellLab()
         case .zoology:

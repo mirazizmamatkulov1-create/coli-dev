@@ -15,6 +15,7 @@ enum Subject: String, CaseIterable, Identifiable, Hashable, Sendable {
     case mathematics
     case english
     case physics
+    case chemistry
     case biology
     case zoology
     case programming
@@ -35,6 +36,7 @@ enum Subject: String, CaseIterable, Identifiable, Hashable, Sendable {
         case .mathematics: return "function"
         case .english: return "text.book.closed.fill"
         case .physics: return "atom"
+        case .chemistry: return "flask.fill"
         case .biology: return "leaf.fill"
         case .zoology: return "pawprint.fill"
         case .programming: return "chevron.left.forwardslash.chevron.right"

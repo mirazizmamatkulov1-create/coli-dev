@@ -275,7 +275,7 @@ struct CustomTopicOutlineItem: Decodable, Identifiable, Equatable {
 
 struct CustomCurriculum: Codable, Equatable {
     private static let builtInSubjectIDs: Set<String> = [
-        "mathematics", "english", "physics", "biology", "zoology", "programming"
+        "mathematics", "english", "physics", "chemistry", "biology", "zoology", "programming"
     ]
 
     var subjects: [CustomLearningSubject] = []

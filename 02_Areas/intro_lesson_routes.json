@@ -17,6 +17,11 @@
       "progress_lesson_id": "intro.physics"
     },
     {
+      "subject_id": "chemistry",
+      "resource": "intro",
+      "progress_lesson_id": "intro.chemistry"
+    },
+    {
       "subject_id": "biology",
       "resource": "intro",
       "progress_lesson_id": "intro.biology"

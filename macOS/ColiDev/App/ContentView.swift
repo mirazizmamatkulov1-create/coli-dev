@@ -405,7 +405,7 @@ private enum CauseAndCorseLearningJourney {
             title: .init(ru: "Биология и зоология: системы жизни", en: "Biology and zoology: living systems"),
             description: .init(ru: "Клетки, наследственность, эволюция и функции животных; в приложении урок «Что такое жизнь и как она могла возникнуть» связывает их с вопросом о происхождении и создании жизни. Старые материалы сверяй с современными источниками.", en: "Cells, heredity, evolution, and animal function; in the app, “What life is and how it might have begun” connects them to the question of how life began and could be built. Compare older course material with current sources."),
             projectOutput: .init(ru: "Сделай схему одной биологической системы и подпиши, какие источники подтверждают связи между её частями.", en: "Diagram one biological system and cite sources that support the links between its parts."),
-            subjects: [.biology, .zoology],
+            subjects: [.chemistry, .biology, .zoology],
             sources: [
                 .init(id: "biology.stepik", title: .init(ru: "Stepik · молекулярная биология 70 · обновлён 19.12.2023", en: "Stepik · molecular biology 70 · page updated 2023-12-19"), url: "https://stepik.org/course/70/promo"),
                 .init(id: "biology.zoology", title: .init(ru: "Stepik · молекулярная филогенетика 2054", en: "Stepik · molecular phylogenetics #2054"), url: "https://stepik.org/course/2054/promo")
@@ -3279,6 +3279,7 @@ private struct ManagementView: View {
                 ("Mathematics", "Математика", "Mathematics"),
                 ("English", "Английский", "English"),
                 ("Physics", "Физика", "Physics"),
+                ("Chemistry", "Химия", "Chemistry"),
                 ("Biology", "Биология", "Biology"),
                 ("Zoology", "Зоология", "Zoology"),
                 ("Programming", "Программирование", "Programming"),

@@ -21,6 +21,7 @@ BUILT_IN_SUBJECTS = (
     "Mathematics",
     "English",
     "Physics",
+    "Chemistry",
     "Biology",
     "Zoology",
     "Programming",

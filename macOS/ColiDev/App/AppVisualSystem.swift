@@ -35,6 +35,7 @@ enum ColiDevVisualSystem {
         case "mathematics": return ColorToken(lightHex: 0x5747B8, darkHex: 0xB6A8FF)
         case "english": return ColorToken(lightHex: 0xB64B2B, darkHex: 0xFF9778)
         case "physics": return ColorToken(lightHex: 0x176FAD, darkHex: 0x68B9FF)
+        case "chemistry": return ColorToken(lightHex: 0x9B3474, darkHex: 0xF28CC8)
         case "biology": return ColorToken(lightHex: 0x1F7652, darkHex: 0x65D39B)
         case "zoology": return ColorToken(lightHex: 0x8A5E13, darkHex: 0xF2BD63)
         case "programming": return ColorToken(lightHex: 0x0E6F79, darkHex: 0x55D4DF)

@@ -720,7 +720,7 @@ def test_curriculum_lesson_links_resolve_to_bilingual_module_files() -> None:
             linked_subjects.add(subject)
 
     assert linked_subjects == {
-        "Biology", "English", "Mathematics", "Physics", "Programming", "Zoology"
+        "Biology", "Chemistry", "English", "Mathematics", "Physics", "Programming", "Zoology"
     }
 
 

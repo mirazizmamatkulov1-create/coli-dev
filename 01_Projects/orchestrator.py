@@ -519,7 +519,7 @@ class ChatRequest(BaseModel):
         min_length=1,
         max_length=43,
         pattern=(
-            r"^(?:mathematics|english|physics|biology|zoology|programming|"
+            r"^(?:mathematics|english|physics|chemistry|biology|zoology|programming|"
             r"custom-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"
         ),
     )
@@ -2905,7 +2905,7 @@ def _sync_automatic_embedding_model(ollama_info: dict[str, Any]) -> None:
     )
 
 SUBJECT_MODEL_ROUTE_SUBJECTS = (
-    "mathematics", "english", "physics", "biology", "zoology", "programming",
+    "mathematics", "english", "physics", "chemistry", "biology", "zoology", "programming",
 )
 AUTO_AGENT_MODEL_ROLES = ("local_draft", "gemini_draft", "critic", "verifier")
 _SUBJECT_MODEL_ROUTE_PROVIDERS = frozenset({"auto", "gemini", "kimi", "openrouter", "compatible", "ollama"})

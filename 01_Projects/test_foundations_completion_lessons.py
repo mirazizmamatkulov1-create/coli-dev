@@ -30,7 +30,7 @@ def _strings() -> dict[str, tuple[str, str]]:
 
 def test_every_foundations_topic_now_links_a_lesson() -> None:
     gaps = []
-    for subject in ("Mathematics", "English", "Physics", "Biology", "Zoology", "Programming"):
+    for subject in ("Mathematics", "English", "Physics", "Chemistry", "Biology", "Zoology", "Programming"):
         roadmap = (ROOT / "02_Areas" / subject / "curriculum.md").read_text(encoding="utf-8")
         foundations = roadmap.split("## База / Foundations", 1)[1].split("\n## ", 1)[0]
         for line in foundations.splitlines():

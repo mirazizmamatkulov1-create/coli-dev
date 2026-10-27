@@ -12,6 +12,7 @@ EXPECTED_ROUTES = {
     "mathematics": "intro",
     "english": "intro",
     "physics": "intro",
+    "chemistry": "intro",
     "biology": "intro",
     "zoology": "intro",
     "programming": "intro",

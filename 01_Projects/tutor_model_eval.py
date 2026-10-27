@@ -36,7 +36,7 @@ from subject_rubrics import add_subject_rubric  # noqa: E402
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 QUESTIONS_PATH = Path(__file__).resolve().parent / "tutor_eval_questions.json"
 OLLAMA_URL = "http://127.0.0.1:11434"
-NUM_PREDICT = 1024  # Same output budget as the tutor's Ollama requests.
+NUM_PREDICT = 1536  # Same as orchestrator.OLLAMA_NUM_PREDICT. / Как orchestrator.OLLAMA_NUM_PREDICT.
 
 
 def load_questions(path: Path = QUESTIONS_PATH) -> list[dict[str, Any]]:

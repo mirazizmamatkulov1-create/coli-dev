@@ -113,6 +113,12 @@ def test_tutor_questions_are_russian_with_grading_notes() -> None:
         assert any("а" <= character <= "я" for character in question["question"].casefold())
 
 
+def test_tutor_eval_uses_the_production_output_budget() -> None:
+    import orchestrator
+
+    assert tutor_model_eval.NUM_PREDICT == orchestrator.OLLAMA_NUM_PREDICT
+
+
 def test_tutor_variant_parsing_keeps_production_payload_by_default() -> None:
     assert tutor_model_eval.parse_variant("qwen2.5-coder:7b") == {
         "label": "qwen2.5-coder:7b", "model": "qwen2.5-coder:7b",

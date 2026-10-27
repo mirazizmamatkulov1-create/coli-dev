@@ -4580,7 +4580,24 @@ class TestConsiliumEngine:
 
         assert asyncio.run(ask()) == "Ответ"
         assert captured["think"] is False
-        assert captured["options"]["num_predict"] == 1024
+        assert captured["options"]["num_predict"] == 1536
+
+    def test_ollama_answer_waits_for_a_full_local_answer(self):
+        response = MagicMock()
+        response.json.return_value = {"model": "qwen3.5:latest", "message": {"content": "Ответ"}, "done": True}
+        client = MagicMock(spec=httpx.AsyncClient)
+        client.post = AsyncMock(return_value=response)
+        engine = orchestrator.ConsiliumEngine(client, ollama_client=client)
+
+        assert asyncio.run(engine._ask_ollama("Вопрос", "system", "test")) == "Ответ"
+
+        assert client.post.call_args.kwargs["timeout"] == orchestrator.OLLAMA_ANSWER_TIMEOUT_SECONDS == 300
+        assert client.post.call_args.kwargs["json"]["model"] == orchestrator.OLLAMA_MODEL_RESEARCHER
+
+    def test_default_local_tutor_is_qwen3_5(self):
+        assert orchestrator.DEFAULT_OLLAMA_TUTOR_MODEL == "qwen3.5:latest"
+        if "OLLAMA_RESEARCHER" not in os.environ:
+            assert orchestrator.OLLAMA_MODEL_RESEARCHER == "qwen3.5:latest"
 
     def test_ollama_chat_stream_uses_ndjson_incrementally(self, monkeypatch):
         chunks = [
@@ -4602,7 +4619,7 @@ class TestConsiliumEngine:
             assert request.url.path == "/api/chat"
             assert payload["stream"] is True
             assert payload["model"] == "qwen3:8b"
-            assert payload["options"]["num_predict"] == 1024
+            assert payload["options"]["num_predict"] == 1536
             assert payload["think"] is False
             return httpx.Response(200, stream=ChunkedBody())
 

@@ -244,7 +244,19 @@ GEMINI_PRO_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMI
 # Ollama (локально)
 OLLAMA_BASE = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
 OLLAMA_CHAT_URL = f"{OLLAMA_BASE}/api/chat"
-OLLAMA_MODEL_RESEARCHER = os.getenv("OLLAMA_RESEARCHER", "qwen2.5-coder:7b")
+# qwen3.5 answered 10 of 10 Russian tutor questions correctly versus 6 of 10
+# for qwen2.5-coder:7b (project-plan/research/rag-semantic-search-and-tutor-model-2026-10-26.md).
+# qwen3.5 верно ответила на 10 из 10 вопросов тьютору, qwen2.5-coder:7b — на 6 из 10.
+DEFAULT_OLLAMA_TUTOR_MODEL = "qwen3.5:latest"
+OLLAMA_MODEL_RESEARCHER = os.getenv("OLLAMA_RESEARCHER", DEFAULT_OLLAMA_TUTOR_MODEL)
+# Output budget per local answer: 1024 tokens cut off 3 of 10 qwen3.5 answers.
+# Лимит одного локального ответа: при 1024 токенах обрывались 3 из 10 ответов qwen3.5.
+OLLAMA_NUM_PREDICT = 1536
+# A non-streamed answer arrives only when complete: at ~8 tokens/s on an M1,
+# 1536 tokens plus the RAG prompt take up to about 3.5 minutes.
+# Непотоковый ответ приходит целиком: на M1 (~8 ток/с) 1536 токенов и промпт с RAG
+# занимают до ~3,5 минуты.
+OLLAMA_ANSWER_TIMEOUT_SECONDS = 300
 OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "").strip()
 # Multilingual RU/EN embedding model used automatically once it is installed in
 # local Ollama, unless OLLAMA_EMBEDDING_MODEL or the Control Center says otherwise.
@@ -1642,7 +1654,7 @@ class ConsiliumEngine:
     # ─── Локальный режим (Digital Twin) ─────────────────
 
     async def run_local(self, message: str, system_prompt: str) -> tuple[str, DebateLog]:
-        """Автономный локальный режим на базе Qwen 2.5 (Digital Twin)."""
+        """Автономный локальный режим на модели Ollama по умолчанию. / Local mode on the default Ollama model."""
         self.log = DebateLog()
         t0 = datetime.now(timezone.utc)
 
@@ -2429,7 +2441,7 @@ class ConsiliumEngine:
         agent_tag: str,
         model: str | None = None,
     ) -> str:
-        """Запрос к локальной Ollama (Qwen 2.5 Coder 7B)."""
+        """Запрос к локальной Ollama (по умолчанию qwen3.5). / Request to local Ollama (qwen3.5 by default)."""
         if not _is_loopback_http_url(OLLAMA_BASE):
             return "[Ошибка: Ollama endpoint must use localhost or a loopback IP for local privacy]"
         selected_model = model or OLLAMA_MODEL_RESEARCHER
@@ -2445,10 +2457,12 @@ class ConsiliumEngine:
             # Иначе «думающие» модели (например, qwen3.5) тратят весь лимит ответа на
             # скрытые рассуждения; модели без этого режима флаг игнорируют.
             "think": False,
-            "options": {"num_predict": 1024},
+            "options": {"num_predict": OLLAMA_NUM_PREDICT},
         }
         try:
-            resp = await self.ollama_http.post(OLLAMA_CHAT_URL, json=payload, timeout=90)
+            resp = await self.ollama_http.post(
+                OLLAMA_CHAT_URL, json=payload, timeout=OLLAMA_ANSWER_TIMEOUT_SECONDS
+            )
             resp.raise_for_status()
             data = resp.json()
             await _record_provider_usage(
@@ -2460,7 +2474,7 @@ class ConsiliumEngine:
             return data["message"]["content"]
         except httpx.TimeoutException:
             logger.warning(f"Ollama timeout ({agent_tag})")
-            return f"[Таймаут: {agent_tag} не ответил за 90s]"
+            return f"[Таймаут: {agent_tag} не ответил за {OLLAMA_ANSWER_TIMEOUT_SECONDS}s]"
         except httpx.HTTPStatusError as exc:
             logger.error(
                 f"Ollama HTTP error ({agent_tag})",
@@ -2498,9 +2512,11 @@ class ConsiliumEngine:
             # Без этого qwen3.5 вернула пустой ответ на 8 из 10 вопросов тьютору:
             # скрытые рассуждения съели все 1024 токена.
             "think": False,
-            "options": {"num_predict": 1024},
+            "options": {"num_predict": OLLAMA_NUM_PREDICT},
         }
         try:
+            # 90 s is the wait between stream chunks, not for the whole answer.
+            # 90 с — ожидание между кусками потока, а не всего ответа.
             async with self.ollama_http.stream(
                 "POST",
                 OLLAMA_CHAT_URL,

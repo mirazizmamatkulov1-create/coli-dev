@@ -22,8 +22,8 @@
 | Косвенная речь: вопросы, просьбы и согласование времён / Reported speech: questions, requests, and backshift | Перестраивать вопросы и просьбы в косвенную речь, согласуя порядок слов, местоимения и время с контекстом. / Report questions and requests with context-appropriate word order, pronouns, and tense. | lesson:reported_speech_questions_and_backshift |
 | Фразовые глаголы, устойчивые сочетания и регистр / Phrasal verbs, collocations, register | Выбирать естественную формулировку с учётом собеседника и ситуации. / Choose natural language for audience and context. | |
 | Стратегии чтения и понимание связной речи / Reading strategies and connected speech | Следить за аргументом и распознавать редукцию звуков в обычном темпе. / Follow arguments and recognize reductions in natural speech. | |
-| Абзац, эссе, пересказ и презентация / Paragraphs, essays, summaries, presentations | Строить связный текст с тезисом, опорными доводами и переходами. / Structure writing with claims, support, and transitions. | |
-| Обсуждение и аргументация / Discussion and argumentation | Соглашаться, возражать, уточнять источник утверждения и поддерживать разговор. / Agree, disagree, ask for clarification, and sustain discussion. | |
+| Абзац, эссе, пересказ и презентация / Paragraphs, essays, summaries, presentations | Строить связный текст с тезисом, опорными доводами и переходами. / Structure writing with claims, support, and transitions. | lesson:thesis_evidence_and_transitions |
+| Обсуждение и аргументация / Discussion and argumentation | Соглашаться, возражать, уточнять источник утверждения и поддерживать разговор. / Agree, disagree, ask for clarification, and sustain discussion. | lesson:counterclaims_and_respectful_argument |
 
 ## Продвинутый уровень / Advanced
 

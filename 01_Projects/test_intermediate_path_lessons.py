@@ -164,3 +164,41 @@ def test_dependency_lesson_points_at_real_project_files() -> None:
     assert "pip install -r requirements.txt" in russian and "pip install -r requirements.txt" in english
     assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
     assert _linked("Programming", "virtual_environments_and_dependencies")
+
+
+def test_logistic_growth_rate() -> None:
+    def rate(n: float) -> float:
+        return 0.1 * n * (1000 - n) / 1000
+
+    assert math.isclose(rate(500), 25) and rate(1000) == 0 and math.isclose(0.1 * 500, 50)
+    assert max(range(0, 1001, 100), key=rate) == 500
+    russian, english = _sections("Zoology", "logistic_population_growth")
+    assert "0,1 · 500 · (1000 − 500)/1000 = 25" in russian and "0.1 · 500 · (1000 − 500)/1000 = 25" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked("Zoology", "logistic_population_growth")
+
+
+def test_zoology_concept_lessons_are_linked_and_answered() -> None:
+    expectations = {
+        "arthropods_and_molting": ("экдизис", "ecdysis"),
+        "chordate_features": ("хорда", "notochord"),
+        "innate_and_learned_behavior": ("Импринтинг", "Imprinting"),
+        "symbiosis_mutualism_and_parasitism": ("бактерии-симбионты", "bacterial symbionts"),
+    }
+    for resource, (ru_term, en_term) in expectations.items():
+        russian, english = _sections("Zoology", resource)
+        assert ru_term in russian and en_term in english, resource
+        assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1", resource
+        assert _linked("Zoology", resource), resource
+
+
+def test_english_argument_lessons() -> None:
+    russian, english = _sections("English", "thesis_evidence_and_transitions")
+    assert "therefore" in russian and "therefore" in english
+    assert "Our town should build a traffic light" in _answer(english, "Options").split("\n")[0]
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked("English", "thesis_evidence_and_transitions")
+    russian, english = _sections("English", "counterclaims_and_respectful_argument")
+    assert "concede" in russian and "concede" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked("English", "counterclaims_and_respectful_argument")

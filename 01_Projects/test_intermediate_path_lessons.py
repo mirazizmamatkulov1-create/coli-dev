@@ -202,3 +202,37 @@ def test_english_argument_lessons() -> None:
     assert "concede" in russian and "concede" in english
     assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
     assert _linked("English", "counterclaims_and_respectful_argument")
+
+
+def _linked_advanced(subject: str, resource: str) -> bool:
+    roadmap = (AREAS / subject / "curriculum.md").read_text(encoding="utf-8")
+    advanced = roadmap.split("## Продвинутый уровень / Advanced", 1)[1].split("\n## ", 1)[0]
+    return f"lesson:{resource}" in advanced
+
+
+def test_autocatalytic_doubling_against_linear_growth() -> None:
+    assert 2 ** 10 == 1024 and 1 + 10 == 11
+    russian, english = _sections("Chemistry", "prebiotic_chemistry_and_autocatalysis")
+    assert "2¹⁰ = 1024" in russian and "2¹⁰ = 1024" in english
+    assert "никто не воспроизвёл" in russian and "no one has yet reproduced" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked_advanced("Chemistry", "prebiotic_chemistry_and_autocatalysis")
+
+
+def test_atp_coupling_sum() -> None:
+    assert math.isclose(20 - 30.5, -10.5) and math.ceil(45 / 30.5) == 2 and 12 - 30.5 < 0
+    russian, english = _sections("Chemistry", "thermodynamics_of_living_systems")
+    assert "−7,3 ккал/моль" in russian and "−30,5 кДж/моль" in russian
+    assert "+20 − 30.5 = −10.5 kJ/mol" in english
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked_advanced("Chemistry", "thermodynamics_of_living_systems")
+
+
+def test_dna_fidelity_extends_the_error_threshold() -> None:
+    limit = math.log(10) / -math.log1p(-1e-9)
+    assert 2.30e9 < limit < 2.31e9
+    assert math.floor(math.log(10) / -math.log(0.99)) == 229
+    russian, english = _sections("Biology", "dna_replication_fidelity_and_repair")
+    assert "2,3 миллиарда" in russian and "2.3 billion" in english and "229" in russian
+    assert _answer(russian, "Ответ") == "1" and _answer(english, "Answer") == "1"
+    assert _linked_advanced("Biology", "dna_replication_fidelity_and_repair")
